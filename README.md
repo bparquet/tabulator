@@ -1,12 +1,12 @@
 ![Tabluator Table](http://olifolkerd.github.io/tabulator/images/tabulator.png)
 
-### Version 3.2 Out Now!
+### Version 3.3 Out Now!
 
 An easy to use interactive table generation plugin for JQuery UI
 
-Full documentation & demos can be found at: [http://olifolkerd.github.io/tabulator](http://olifolkerd.github.io/tabulator)
+Full documentation & demos can be found at: [http://tabulator.info](http://tabulator.info)
 ***
-![Tabluator Table](http://olifolkerd.github.io/tabulator/images/tabulator_table.jpg)
+![Tabluator Table](http://tabulator.info/images/tabulator_table.jpg)
 ***
 Features
 ================================
@@ -54,9 +54,8 @@ npm install jquery.tabulator --save
 ### CDNJS
 To access Tabulator directly from the CDNJS CDN servers, include the following two lines at the start of your project, instead of the localy hosted versions:
 ```html
-<link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.2.2/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.2.2/tabulator.min.js"></script>
-```
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.3.1/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.3.1/js/tabulator.min.js"></script>
 
 Coming Soon
 ================================

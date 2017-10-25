@@ -35,7 +35,7 @@ ResponsiveLayout.prototype.update = function(){
 
 	while(working){
 
-		let width = self.table.options.fitColumns ? self.table.columnManager.getFlexBaseWidth() : self.table.columnManager.getWidth();
+		let width = self.table.extensions.layout.getMode() == "fitColumns" ? self.table.columnManager.getFlexBaseWidth() : self.table.columnManager.getWidth();
 
 		let diff = self.table.columnManager.element.innerWidth() - width;
 
@@ -51,14 +51,18 @@ ResponsiveLayout.prototype.update = function(){
 			}
 
 		}else{
+
 			//table has spare space
 			let column = self.columns[self.index -1];
 
 			if(column){
 				if(diff > 0){
-
 					if(diff >= column.getWidth()){
 						column.show();
+
+						//set column width to prevent calculation loops on uninitialized columns
+						column.setWidth(column.getWidth());
+
 						self.index --;
 					}else{
 						working = false;

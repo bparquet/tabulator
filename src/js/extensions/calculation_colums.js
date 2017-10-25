@@ -85,6 +85,26 @@ ColumnCalcs.prototype.initializeColumn = function(column){
 
 };
 
+ColumnCalcs.prototype.removeCalcs = function(){
+	var changed = false;
+
+	if(this.topInitialized){
+		this.topInitialized = false;
+		this.topElement.remove();
+		changed = true;
+	}
+
+	if(this.botInitialized){
+		this.botInitialized = false;
+		this.table.footerManager.remove(this.botElement);
+		changed = true;
+	}
+
+	if(changed){
+		this.table.rowManager.adjustTableSize();
+	}
+};
+
 ColumnCalcs.prototype.initializeTopRow = function(){
 	if(!this.topInitialized){
 		this.table.columnManager.element.append(this.topElement);
@@ -141,6 +161,26 @@ ColumnCalcs.prototype.recalc = function(rows){
 	}
 };
 
+ColumnCalcs.prototype.recalcRowGroup = function(row){
+	var data, rowData;
+
+	var group = this.table.extensions.groupRows.getRowGroup(row);
+
+	if(group.calcs.bottom){
+		data = this.rowsToData(group.rows);
+		rowData = this.generateRowData("bottom", data);
+
+		group.calcs.bottom.updateData(rowData);
+	}
+
+	if(group.calcs.top){
+		data = this.rowsToData(group.rows);
+		rowData = this.generateRowData("top", data);
+
+		group.calcs.top.updateData(rowData);
+	}
+};
+
 
 //generate top stats row
 ColumnCalcs.prototype.generateTopRow = function(rows){
@@ -180,6 +220,19 @@ ColumnCalcs.prototype.generateRow = function(pos, data){
 				//set field name of mock column
 				self.genColumn.setField(column.getField());
 				self.genColumn.hozAlign = column.hozAlign;
+
+				if(column.definition[pos + "CalcFormatter"] && self.table.extExists("format")){
+
+					self.genColumn.extensions.format = {
+						formatter: self.table.extensions.format.getFormatter(column.definition[pos + "CalcFormatter"]),
+						params: column.definition[pos + "CalcFormatterParams"]
+					}
+				}else{
+					self.genColumn.extensions.format = {
+						formatter: self.table.extensions.format.getFormatter("plaintext"),
+						params:{}
+					}
+				}
 
 				//generate cell and assign to correct column
 				var cell = new Cell(self.genColumn, row);
@@ -245,6 +298,7 @@ ColumnCalcs.prototype.calculations = {
 
 		if(values.length){
 			output = values.reduce(function(sum, value){
+				value = Number(value);
 				return sum + value;
 			});
 
@@ -259,6 +313,9 @@ ColumnCalcs.prototype.calculations = {
 		var output = null;
 
 		values.forEach(function(value){
+
+			value = Number(value);
+
 			if(value > output || output === null){
 				output = value;
 			}
@@ -270,6 +327,9 @@ ColumnCalcs.prototype.calculations = {
 		var output = null;
 
 		values.forEach(function(value){
+
+			value = Number(value);
+
 			if(value < output || output === null){
 				output = value;
 			}
@@ -282,6 +342,8 @@ ColumnCalcs.prototype.calculations = {
 
 		if(values.length){
 			values.forEach(function(value){
+				value = Number(value);
+
 				output += !isNaN(value) ? Number(value) : 0;
 			});
 		}
