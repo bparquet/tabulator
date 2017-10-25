@@ -89,6 +89,10 @@
   border-bottom: 6px solid #bbb;
 }
 
+.tabulator .tabulator-header .tabulator-col.tabulator-col-group {
+  border-right: none;
+}
+
 .tabulator .tabulator-header .tabulator-col.tabulator-col-group .tabulator-col-group-cols {
   position: relative;
   display: -ms-flexbox;
@@ -99,6 +103,10 @@
 
 .tabulator .tabulator-header .tabulator-col.tabulator-col-group .tabulator-col-group-cols .tabulator-col:last-child {
   margin-right: -1px;
+}
+
+.tabulator .tabulator-header .tabulator-col.tabulator-col-group > .tabulator-col-content {
+  border-right: 1px solid #aaa;
 }
 
 .tabulator .tabulator-header .tabulator-col:first-child .tabulator-col-resize-handle.prev {

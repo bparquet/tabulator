@@ -66,6 +66,7 @@ var Column = function(def, parent){
 	this.columns = []; //child columns
 	this.cells = []; //cells bound to this column
 	this.element = $("<div class='tabulator-col' role='columnheader' aria-sort='none'></div>"); //column header element
+	this.element.css("display", "inline-block"); // Ensure that this.show() does not insert display:block
 	this.contentElement = false;
 	this.groupElement = $("<div class='tabulator-col-group-cols'></div>"); //column group holder element
 	this.isGroup = false;

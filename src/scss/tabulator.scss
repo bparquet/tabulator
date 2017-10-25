@@ -149,6 +149,7 @@ $footerSeperatorColor:#999; //footer bottom seperator color
 
 			//complex header column group
 			&.tabulator-col-group{
+				border-right: none; //This messes up alignment between the header and cells below
 
 				//gelement to hold sub columns in column group
 				.tabulator-col-group-cols{
@@ -162,6 +163,10 @@ $footerSeperatorColor:#999; //footer bottom seperator color
 						margin-right:-1px;
 					}
 				}
+        &>.tabulator-col-content{
+          // Reinstate the border color on the interior group heading
+          border-right:1px solid $headerBorderColor;
+        }
 			}
 
 			//hide left resize handle on first column
