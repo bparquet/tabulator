@@ -142,7 +142,10 @@ PersistentLayout.prototype.parseColumns = function(columns){
 		}else{
 			def.title = column.getDefinition().title;
 			def.field = column.getField();
-			def.width = column.getWidth();
+      // Only persist the column width if is specified
+      if (column.widthFixed) {
+        def.width = column.getWidth();
+      }
 			def.visible = column.visible;
 		}
 

@@ -457,6 +457,9 @@ ColumnManager.prototype.redraw = function(force){
 
 	this.table.footerManager.redraw();
 
-
+  // Regenerate the group header widths
+  this.columns.forEach(function (column) {
+    column._updateGroupHeaderWidth();
+  });
 
 };

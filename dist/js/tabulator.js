@@ -810,6 +810,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       this.table.footerManager.redraw();
+
+      // Regenerate the group header widths
+
+
+      this.columns.forEach(function (column) {
+
+        column._updateGroupHeaderWidth();
+      });
     };
 
     //public column object
@@ -1471,6 +1479,34 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       self.element.append(self.groupElement);
     };
 
+    // Recomputes the group header to be the sum of the visible nested columns
+
+    Column.prototype._updateGroupHeaderWidth = function () {
+
+      if (this.isGroup && this.visible) {
+
+        var length = this.columns.length,
+            groupWidth = 0;
+
+        for (var i = 0; i < length; i++) {
+
+          var column = this.columns[i];
+
+          if (column.visible) {
+
+            groupWidth += column.width;
+          }
+        }
+
+        this.element.css("width", groupWidth || "");
+
+        if (this.parent.isGroup) {
+
+          this.parent._updateGroupHeaderWidth();
+        }
+      }
+    };
+
     //flat field lookup
 
     Column.prototype._getFlatData = function (data) {
@@ -1745,6 +1781,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (this.parent.isGroup) {
 
           this.parent.checkColumnVisibility();
+
+          this.parent._updateGroupHeaderWidth();
         }
 
         this.cells.forEach(function (cell) {
@@ -1776,6 +1814,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (this.parent.isGroup) {
 
           this.parent.checkColumnVisibility();
+
+          this.parent._updateGroupHeaderWidth();
         }
 
         this.cells.forEach(function (cell) {
@@ -1818,6 +1858,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
           cell.setWidth(width);
         });
+      }
+
+      if (this.parent.isGroup) {
+
+        this.parent._updateGroupHeaderWidth();
       }
 
       //set resizable handles
@@ -13171,7 +13216,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
           def.field = column.getField();
 
-          def.width = column.getWidth();
+          // Only persist the column width if is specified
+
+
+          if (column.widthFixed) {
+
+            def.width = column.getWidth();
+          }
 
           def.visible = column.visible;
         }

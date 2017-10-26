@@ -496,6 +496,28 @@ Column.prototype._buildGroupHeader = function(){
 	self.element.append(self.groupElement);
 };
 
+// Recomputes the group header to be the sum of the visible nested columns
+Column.prototype._updateGroupHeaderWidth = function () {
+  if (this.isGroup && this.visible) {
+    var length = this.columns.length,
+        groupWidth = 0;
+
+    for (var i = 0; i < length; i++) {
+      var column = this.columns[i];
+      if (column.visible) {
+        groupWidth += column.width;
+      }
+    }
+
+    this.element.css("width", groupWidth || "");
+
+    if (this.parent.isGroup) {
+      this.parent._updateGroupHeaderWidth();
+    }
+  }
+};
+
+
 //flat field lookup
 Column.prototype._getFlatData = function(data){
 	return data[this.field];
@@ -700,6 +722,7 @@ Column.prototype.show = function(){
 
 		if(this.parent.isGroup){
 			this.parent.checkColumnVisibility();
+      this.parent._updateGroupHeaderWidth();
 		}
 
 		this.cells.forEach(function(cell){
@@ -724,6 +747,7 @@ Column.prototype.hide = function(){
 
 		if(this.parent.isGroup){
 			this.parent.checkColumnVisibility();
+      this.parent._updateGroupHeaderWidth();
 		}
 
 		this.cells.forEach(function(cell){
@@ -759,6 +783,10 @@ Column.prototype.setWidthActual = function(width){
 			cell.setWidth(width);
 		});
 	}
+
+  if (this.parent.isGroup) {
+    this.parent._updateGroupHeaderWidth();
+  }
 
 	//set resizable handles
 	if(this.table.extExists("frozenColumns")){
