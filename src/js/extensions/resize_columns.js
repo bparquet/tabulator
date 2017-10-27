@@ -40,6 +40,19 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 			}
 		});
 
+    handle.addEventListener("dblclick", function (e) {
+      var nearestColumn = column.getLastColumn();
+
+      if (nearestColumn) {
+        delete nearestColumn.definition.width;
+        nearestColumn.reinitializeWidth();
+
+        if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
+          self.table.extensions.persistentLayout.save();
+        }
+      }
+    });
+
 		prevHandle.addEventListener("click", function(e){
 			e.stopPropagation();
 		});
@@ -59,6 +72,24 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 				}
 			}
 		});
+
+    prevHandle.addEventListener("dblclick", function (e) {
+      var nearestColumn = column.getLastColumn();
+
+      if (nearestColumn) {
+        var colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
+        var prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+
+        if (prevColumn) {
+          delete prevColumn.definition.width;
+          prevColumn.reinitializeWidth();
+
+          if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
+            self.table.extensions.persistentLayout.save();
+          }
+        }
+      }
+    });
 
 		element.append(handle)
 		.append(prevHandle);

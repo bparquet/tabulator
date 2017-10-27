@@ -101,10 +101,6 @@
   overflow: hidden;
 }
 
-.tabulator .tabulator-header .tabulator-col.tabulator-col-group .tabulator-col-group-cols .tabulator-col:last-child {
-  margin-right: -1px;
-}
-
 .tabulator .tabulator-header .tabulator-col.tabulator-col-group > .tabulator-col-content {
   border-right: 1px solid #aaa;
 }
