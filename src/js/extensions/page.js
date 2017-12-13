@@ -14,6 +14,7 @@ var Page = function(table){
 	this.page = 1;
 	this.max = 1;
 	this.paginator = false;
+	this.loadPage = false;
 };
 
 //setup pageination
@@ -33,6 +34,9 @@ Page.prototype.initialize = function(){
 		self.paginator = self.table.options.paginator;
 	}
 
+  if (self.table.options.loadPage){
+    self.loadPage = self.table.options.loadPage;
+  }
 
 	//build pagination element
 
@@ -294,7 +298,12 @@ Page.prototype.trigger = function(){
 Page.prototype._getRemotePage = function(){
 	if(this.table.extExists("ajax", true)){
 
-		if(this.paginator){
+    if (this.loadPage) {
+      var self = this;
+      this.loadPage(self.page, self.size).then(function (data) {
+        self._parseRemoteData(data);
+      });
+    } else if (this.paginator) {
 			this._getRemotePagePaginator();
 		}else{
 			this._getRemotePageAuto();

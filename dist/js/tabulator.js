@@ -12445,6 +12445,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       this.max = 1;
 
       this.paginator = false;
+
+      this.loadPage = false;
     };
 
     //setup pageination
@@ -12470,6 +12472,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (self.table.options.paginator) {
 
         self.paginator = self.table.options.paginator;
+      }
+
+      if (self.table.options.loadPage) {
+
+        self.loadPage = self.table.options.loadPage;
       }
 
       //build pagination element
@@ -12839,7 +12846,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       if (this.table.extExists("ajax", true)) {
 
-        if (this.paginator) {
+        if (this.loadPage) {
+
+          var self = this;
+
+          this.loadPage(self.page, self.size).then(function (data) {
+
+            self._parseRemoteData(data);
+          });
+        } else if (this.paginator) {
 
           this._getRemotePagePaginator();
         } else {
