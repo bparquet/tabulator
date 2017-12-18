@@ -30,8 +30,8 @@ RowComponent.prototype.getIndex = function(){
 	return this.row.getData(true)[this.row.table.options.index];
 };
 
-RowComponent.prototype.delete = function(){
-	this.row.delete();
+RowComponent.prototype["delete"] = function(){
+	this.row["delete"]();
 };
 
 RowComponent.prototype.scrollTo = function(){
@@ -448,7 +448,7 @@ Row.prototype.getCells = function(){
 
 ///////////////////// Actions  /////////////////////
 
-Row.prototype.delete = function(){
+Row.prototype["delete"] = function(){
 
 	var index = this.table.rowManager.getRowIndex(this);
 
@@ -475,7 +475,7 @@ Row.prototype.deleteCells = function(){
 	var cellCount = this.cells.length;
 
 	for(let i = 0; i < cellCount; i++){
-		this.cells[0].delete();
+		this.cells[0]["delete"]();
 	}
 };
 

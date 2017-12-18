@@ -515,7 +515,7 @@
 	 			var row = this.rowManager.findRow(index);
 
 	 			if(row){
-	 				row.delete();
+	 				row["delete"]();
 	 				return true;
 	 			}else{
 	 				console.warn("Delete Error - No matching row found:", index);
@@ -646,7 +646,7 @@
 	 			var column = this.columnManager.findColumn(field);
 
 	 			if(column){
-	 				column.delete();
+	 				column["delete"]();
 	 			}else{
 	 				console.warn("Column Delete Error - No matching column found:", field);
 	 				return false;

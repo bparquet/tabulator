@@ -882,9 +882,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     };
 
-    ColumnComponent.prototype.delete = function () {
+    ColumnComponent.prototype["delete"] = function () {
 
-      this.column.delete();
+      this.column["delete"]();
     };
 
     ColumnComponent.prototype._getSelf = function () {
@@ -1926,13 +1926,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     };
 
-    Column.prototype.delete = function () {
+    Column.prototype["delete"] = function () {
 
       if (this.isGroup) {
 
         this.columns.forEach(function (column) {
 
-          column.delete();
+          column["delete"]();
         });
       }
 
@@ -1940,7 +1940,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       for (var i = 0; i < cellCount; i++) {
 
-        this.cells[0].delete();
+        this.cells[0]["delete"]();
       }
 
       this.element.detach();
@@ -3528,9 +3528,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return this.row.getData(true)[this.row.table.options.index];
     };
 
-    RowComponent.prototype.delete = function () {
+    RowComponent.prototype["delete"] = function () {
 
-      this.row.delete();
+      this.row["delete"]();
     };
 
     RowComponent.prototype.scrollTo = function () {
@@ -4055,7 +4055,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     ///////////////////// Actions  /////////////////////
 
 
-    Row.prototype.delete = function () {
+    Row.prototype["delete"] = function () {
 
       var index = this.table.rowManager.getRowIndex(this);
 
@@ -4085,7 +4085,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       for (var i = 0; i < cellCount; i++) {
 
-        this.cells[0].delete();
+        this.cells[0]["delete"]();
       }
     };
 
@@ -4566,7 +4566,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       this.element.focus();
     };
 
-    Cell.prototype.delete = function () {
+    Cell.prototype["delete"] = function () {
 
       this.element.detach();
 
@@ -5512,7 +5512,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         if (row) {
 
-          row.delete();
+          row["delete"]();
 
           return true;
         } else {
@@ -5690,7 +5690,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         if (column) {
 
-          column.delete();
+          column["delete"]();
         } else {
 
           console.warn("Column Delete Error - No matching column found:", field);
@@ -6547,14 +6547,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     Localize.prototype.setHeaderFilterPlaceholder = function (placeholder) {
 
-      this.langs.default.headerFilters.default = placeholder;
+      this.langs["default"].headerFilters["default"] = placeholder;
     };
 
     //set header filter placeholder by column
 
     Localize.prototype.setHeaderFilterColumnPlaceholder = function (column, placeholder) {
 
-      this.langs.default.headerFilters.columns[column] = placeholder;
+      this.langs["default"].headerFilters.columns[column] = placeholder;
 
       if (this.lang && !this.lang.headerFilters.columns[column]) {
 
@@ -6653,7 +6653,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       //load default lang template
 
-      self.lang = $.extend(true, {}, self.langs.default);
+      self.lang = $.extend(true, {}, self.langs["default"]);
 
       if (desiredLocale != "default") {
 
@@ -11054,7 +11054,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       rowAdd: function rowAdd(action) {
 
-        action.component.delete();
+        action.component["delete"]();
       },
 
       rowDelete: function rowDelete(action) {
@@ -11082,7 +11082,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       rowDelete: function rowDelete(action) {
 
-        action.component.delete();
+        action.component["delete"]();
       }
 
     };
@@ -14299,7 +14299,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       //sort booleans
 
 
-      boolean: function boolean(a, b, aRow, bRow, column, dir, params) {
+      "boolean": function sort_booleans(a, b, aRow, bRow, column, dir, params) {
 
         var el1 = a === true || a === "true" || a === "True" || a === 1 ? 1 : 0;
 
@@ -14521,7 +14521,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       //is float
 
 
-      float: function float(cell, value, parameters) {
+      "float": function is_float(cell, value, parameters) {
 
         value = Number(value);
 
@@ -14579,7 +14579,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       //in provided value list
 
 
-      in: function _in(cell, value, parameters) {
+      "in": function is_in(cell, value, parameters) {
 
         if (typeof parameters == "string") {
 

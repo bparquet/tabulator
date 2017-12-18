@@ -97,7 +97,7 @@ Validate.prototype.validators = {
 	},
 
 	//is float
-	float:function(cell, value, parameters){
+	"float":function is_float(cell, value, parameters){
 		value = Number(value);
 		return typeof value === 'number' && isFinite(value) && value % 1 !== 0;;
 	},
@@ -134,7 +134,7 @@ Validate.prototype.validators = {
 	},
 
 	//in provided value list
-	in:function(cell, value, parameters){
+	"in":function is_in(cell, value, parameters){
 		if(typeof parameters == "string"){
 			parameters = parameters.split("|");
 		}

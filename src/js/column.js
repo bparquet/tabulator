@@ -47,8 +47,8 @@ ColumnComponent.prototype.toggle = function(){
 	}
 };
 
-ColumnComponent.prototype.delete = function(){
-	this.column.delete();
+ColumnComponent.prototype["delete"] = function(){
+	this.column["delete"]();
 };
 
 ColumnComponent.prototype._getSelf = function(){
@@ -836,17 +836,17 @@ Column.prototype.setMinWidth = function(minWidth){
 	});
 };
 
-Column.prototype.delete = function(){
+Column.prototype["delete"] = function(){
 	if(this.isGroup){
 		this.columns.forEach(function(column){
-			column.delete();
+			column["delete"]();
 		});
 	}
 
 	var cellCount = this.cells.length;
 
 	for(let i = 0; i < cellCount; i++){
-		this.cells[0].delete();
+		this.cells[0]["delete"]();
 	}
 
 	this.element.detach();

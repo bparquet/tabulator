@@ -67,7 +67,7 @@ History.prototype.undoers = {
 	},
 
 	rowAdd: function(action){
-		action.component.delete();
+		action.component["delete"]();
 	},
 
 	rowDelete: function(action){
@@ -90,7 +90,7 @@ History.prototype.redoers = {
 	},
 
 	rowDelete:function(action){
-		action.component.delete();
+		action.component["delete"]();
 	},
 };
 

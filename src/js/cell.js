@@ -367,7 +367,7 @@ Cell.prototype.edit = function(){
 	this.element.focus();
 };
 
-Cell.prototype.delete = function(){
+Cell.prototype["delete"] = function(){
 	this.element.detach();
 	this.column.deleteCell(this);
 	this.row.deleteCell(this);

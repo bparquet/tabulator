@@ -7,12 +7,12 @@ var Localize = function(table){
 
 //set header placehoder
 Localize.prototype.setHeaderFilterPlaceholder = function(placeholder){
-	this.langs.default.headerFilters.default = placeholder;
+	this.langs["default"].headerFilters["default"] = placeholder;
 };
 
 //set header filter placeholder by column
 Localize.prototype.setHeaderFilterColumnPlaceholder = function(column, placeholder){
-	this.langs.default.headerFilters.columns[column] = placeholder;
+	this.langs["default"].headerFilters.columns[column] = placeholder;
 
 	if(this.lang && !this.lang.headerFilters.columns[column]){
 		this.lang.headerFilters.columns[column] = placeholder;
@@ -85,7 +85,7 @@ Localize.prototype.setLocale = function(desiredLocale){
 	self.locale = desiredLocale;
 
 	//load default lang template
-	self.lang = $.extend(true, {}, self.langs.default);
+	self.lang = $.extend(true, {}, self.langs["default"]);
 
 	if(desiredLocale != "default"){
 		traverseLang(self.langs[desiredLocale], self.lang);
