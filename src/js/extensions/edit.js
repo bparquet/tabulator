@@ -111,14 +111,6 @@ Edit.prototype.bindEditor = function(cell){
 
 		self.currentCell = cell;
 
-		if(mouseClick){
-			mouseClick = false;
-
-			if(cell.column.cellEvents.cellClick){
-				cell.column.cellEvents.cellClick(e, cell.getComponent());
-			}
-		}
-
 		function onRendered(callback){
 			rendered = callback;
 		}
@@ -131,6 +123,14 @@ Edit.prototype.bindEditor = function(cell){
 			}
 
 			if(allowEdit){
+
+				if(mouseClick){
+					mouseClick = false;
+
+					if(cell.column.cellEvents.cellClick){
+						cell.column.cellEvents.cellClick(e, cell.getComponent());
+					}
+				}
 
 				self.table.options.cellEditing(cell.getComponent());
 
@@ -280,8 +280,10 @@ Edit.prototype.editors = {
 		.val(cell.getValue());
 
 		onRendered(function(){
-			input.focus();
 			input.css("height","100%");
+			setTimeout(function(){
+				input.focus();
+			}, 10);
 		});
 
 		//submit new value on blur

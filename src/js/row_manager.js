@@ -458,7 +458,7 @@ RowManager.prototype.getHtml = function(active){
 			var def = column.getDefinition();
 
 			if(column.getVisibility()){
-				header += `<th>${def.title}</th>`;
+				header += `<th>${(def.title || "")}</th>`;
 			}
 		})
 
@@ -544,7 +544,8 @@ RowManager.prototype.getHtml = function(active){
 //choose the path to refresh data after a filter update
 RowManager.prototype.filterRefresh = function(){
 	var table = this.table,
-	options = table.options;
+	options = table.options,
+	left = this.scrollLeft;
 
 	if(options.ajaxFiltering){
 		if(options.pagination == "remote" && table.extExists("page")){
@@ -557,6 +558,8 @@ RowManager.prototype.filterRefresh = function(){
 	}else{
 		this.refreshActiveData();
 	}
+
+	this.scrollHorizontal(left);
 };
 
 //choose the path to refresh data after a sorter update
@@ -577,6 +580,11 @@ RowManager.prototype.sorterRefresh = function(){
 		this.refreshActiveData();
 	}
 
+	this.scrollHorizontal(left);
+};
+
+RowManager.prototype.scrollHorizontal = function(left){
+	this.scrollLeft = left;
 	this.element.scrollLeft(left);
 };
 

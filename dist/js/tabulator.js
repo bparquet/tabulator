@@ -2,7 +2,7 @@
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-/* Tabulator v3.3.1 (c) Oliver Folkerd */
+/* Tabulator v3.3.2 (c) Oliver Folkerd */
 
 /*
  * This file is part of the Tabulator package.
@@ -565,7 +565,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       this._moveColumnInArray(this.columnsByIndex, from, to, after, true);
 
-      this.table.options.columnMoved(from.getComponent());
+      if (this.table.options.columnMoved) {
+
+        this.table.options.columnMoved(from.getComponent(), this.table.columnManager.getComponents());
+      }
 
       if (this.table.options.persistentLayout && this.table.extExists("persistentLayout", true)) {
 
@@ -1774,7 +1777,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         this.visible = true;
 
-        this.element.show();
+        this.element.css({
+
+          "display": ""
+
+        });
 
         this.table.columnManager._verticalAlignHeaders();
 
@@ -1807,7 +1814,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         this.visible = false;
 
-        this.element.hide();
+        this.element.css({
+
+          "display": "none"
+
+        });
 
         this.table.columnManager._verticalAlignHeaders();
 
@@ -2617,7 +2628,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         if (column.getVisibility()) {
 
-          header += '<th>' + def.title + '</th>';
+          header += '<th>' + (def.title || "") + '</th>';
         }
       });
 
@@ -2713,7 +2724,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     RowManager.prototype.filterRefresh = function () {
 
       var table = this.table,
-          options = table.options;
+          options = table.options,
+          left = this.scrollLeft;
 
       if (options.ajaxFiltering) {
 
@@ -2732,6 +2744,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         this.refreshActiveData();
       }
+
+      this.scrollHorizontal(left);
     };
 
     //choose the path to refresh data after a sorter update
@@ -2759,6 +2773,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         this.refreshActiveData();
       }
+
+      this.scrollHorizontal(left);
+    };
+
+    RowManager.prototype.scrollHorizontal = function (left) {
+
+      this.scrollLeft = left;
 
       this.element.scrollLeft(left);
     };
@@ -3550,17 +3571,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     RowComponent.prototype.select = function () {
 
-      this.row.selectRows(this.row);
+      this.row.table.extensions.selectRow.selectRows(this.row);
     };
 
     RowComponent.prototype.deselect = function () {
 
-      this.row.deselectRows(this.row);
+      this.row.table.extensions.selectRow.deselectRows(this.row);
     };
 
     RowComponent.prototype.toggleSelect = function () {
 
-      this.row.toggleRow(this.row);
+      this.row.table.extensions.selectRow.toggleRow(this.row);
     };
 
     RowComponent.prototype._getSelf = function () {
@@ -4985,7 +5006,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         //column callbacks
 
-        columnMoved: function columnMoved() {},
+        columnMoved: false,
 
         columnResized: function columnResized() {},
 
@@ -8190,16 +8211,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         self.currentCell = cell;
 
-        if (mouseClick) {
-
-          mouseClick = false;
-
-          if (cell.column.cellEvents.cellClick) {
-
-            cell.column.cellEvents.cellClick(e, cell.getComponent());
-          }
-        }
-
         function onRendered(callback) {
 
           rendered = callback;
@@ -8215,6 +8226,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           }
 
           if (allowEdit) {
+
+            if (mouseClick) {
+
+              mouseClick = false;
+
+              if (cell.column.cellEvents.cellClick) {
+
+                cell.column.cellEvents.cellClick(e, cell.getComponent());
+              }
+            }
 
             self.table.options.cellEditing(cell.getComponent());
 
@@ -8433,9 +8454,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         onRendered(function () {
 
-          input.focus();
-
           input.css("height", "100%");
+
+          setTimeout(function () {
+
+            input.focus();
+          }, 10);
         });
 
         //submit new value on blur
@@ -9188,8 +9212,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     Filter.prototype.addFilter = function (field, type, value) {
 
-      var self = this,
-          column;
+      var self = this;
 
       if (!Array.isArray(field)) {
 
@@ -9197,6 +9220,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
 
       field.forEach(function (filter) {
+
+        var column;
 
         var filterFunc = false;
 
@@ -9360,7 +9385,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         element.val("");
       });
 
-      self.changed = true;
+      this.changed = true;
     };
 
     //filter row array
@@ -10452,7 +10477,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       } else {
 
-        if (this.groupManager.table.options.groupClosedShowCalcs) {
+        if (!this.groupList.length && this.groupManager.table.options.groupClosedShowCalcs) {
 
           if (this.groupManager.table.extExists("columnCalcs")) {
 
@@ -14158,6 +14183,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
             self._sortItem(item.column, item.dir, self.sortList, i);
           }
+
+          self.setColumnHeader(item.column, item.dir);
+        });
+      } else {
+
+        self.sortList.forEach(function (item, i) {
 
           self.setColumnHeader(item.column, item.dir);
         });
