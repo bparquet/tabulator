@@ -2037,21 +2037,28 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
 
     // Maximize width of collapsed columns
+
     Column.prototype.maximizeWidth = function () {
 
       this.widthFixed = false;
 
       // Set width if present
+
       if (typeof this.definition.width !== "undefined") {
+
         this.setWidth(this.definition.width);
       }
 
       var self = this;
 
       // Will automatically calculate width for value columns
+
       if (!this.widthFixed) {
+
         this.element[0].style.width = "";
+
         self.cells.forEach(function (cell) {
+
           cell.setWidth("");
         });
       }
@@ -2059,30 +2066,46 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var maxWidth = 0;
 
       //Go thru the children of the header and see how much space should be allocated
+
       for (var i = 0; i < this.element[0].children.length; i++) {
+
         var child = this.element[0].children[i];
+
         if (child.className === 'tabulator-col-content') {
+
           // Compute ideal length of header text
+
           var canv = document.createElement('canvas');
+
           var ctx = canv.getContext('2d');
+
           ctx.font = this.element.css("font-size") + ' ' + this.element.css("font-family");
-          maxWidth += ctx.measureText(child.innerText).width
+
+          maxWidth += ctx.measureText(child.innerText).width;
         } else {
+
           // Add space for other elements
+
           maxWidth += child.clientWidth;
         }
       }
 
       // Ensure value cells are not wider
+
       if (!self.width || !this.widthFixed) {
+
         self.cells.forEach(function (cell) {
+
           var width = cell.getWidth();
+
           if (width > maxWidth) {
+
             maxWidth = width;
           }
         });
 
         if (maxWidth) {
+
           self.setWidthActual(Math.ceil(maxWidth) + 1);
         }
       }
@@ -2848,9 +2871,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         table.extensions.selectRow.deselectRows();
       }
 
-       //sort data
+      //sort data
 
-       if (table.extExists("sort")) {
+      if (table.extExists("sort")) {
 
         if (table.extensions.sort.hasChanged() || dataChanged) {
 

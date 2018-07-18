@@ -45,7 +45,7 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 
       if (nearestColumn) {
         delete nearestColumn.definition.width;
-        nearestColumn.reinitializeWidth();
+        nearestColumn.maximizeWidth();
 
         if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
           self.table.extensions.persistentLayout.save();

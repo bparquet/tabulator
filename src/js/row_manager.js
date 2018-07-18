@@ -597,6 +597,15 @@ RowManager.prototype.refreshActiveData = function(dataChanged){
 		table.extensions.selectRow.deselectRows();
 	}
 
+	//sort data
+	if(table.extExists("sort")){
+		if(table.extensions.sort.hasChanged() || dataChanged){
+			table.extensions.sort.sort();
+
+			dataChanged = true;
+		}
+	}
+
 	//filter data
 	if(table.extExists("filter")){
 		if(table.extensions.filter.hasChanged() || dataChanged){
@@ -606,15 +615,6 @@ RowManager.prototype.refreshActiveData = function(dataChanged){
 		}
 	}else{
 		self.setActiveRows(self.rows.slice(0));
-	}
-
-	//sort data
-	if(table.extExists("sort")){
-		if(table.extensions.sort.hasChanged() || dataChanged){
-			table.extensions.sort.sort();
-
-			dataChanged = true;
-		}
 	}
 
 	//group data
