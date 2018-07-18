@@ -32,18 +32,30 @@ ColumnComponent.prototype.getVisibility = function(){
 };
 
 ColumnComponent.prototype.show = function(){
-	this.column.show();
+	if(this.column.isGroup){
+		this.column.columns.forEach(function(column){
+			column.show();
+		});
+	}else{
+		this.column.show();
+	}
 };
 
 ColumnComponent.prototype.hide = function(){
-	this.column.hide();
+	if(this.column.isGroup){
+		this.column.columns.forEach(function(column){
+			column.hide();
+		});
+	}else{
+		this.column.hide();
+	}
 };
 
 ColumnComponent.prototype.toggle = function(){
 	if(this.column.visible){
-		this.column.hide();
+		this.hide();
 	}else{
-		this.column.show();
+		this.show();
 	}
 };
 
@@ -51,8 +63,29 @@ ColumnComponent.prototype["delete"] = function(){
 	this.column["delete"]();
 };
 
+ColumnComponent.prototype.getSubColumns = function(){
+	var output = [];
+
+	if(this.column.columns.length){
+		this.column.columns.forEach(function(column){
+			output.push(column.getComponent());
+		});
+	}
+
+	return output;
+};
+
+ColumnComponent.prototype.getParentColumn = function(){
+	return this.column.parent instanceof Column ? this.column.parent.getComponent() : false;
+};
+
+
 ColumnComponent.prototype._getSelf = function(){
 	return this.column;
+};
+
+ColumnComponent.prototype.scrollTo = function(){
+	this.column.table.columManager.scrollToColumn(this.column);
 };
 
 
@@ -127,7 +160,7 @@ var Column = function(def, parent){
 //////////////// Setup Functions /////////////////
 Column.prototype._mapDepricatedFunctionality = function(field){
 	if(this.definition.tooltipHeader){
-		console.warn("The%c tooltipHeader%c column definition property has been depricated and will be removed in version 4.0, use %c headerTooltio%c instead.", "font-weight:bold;", "font-weight:regular;", "font-weight:bold;", "font-weight:regular;");
+		console.warn("The%c tooltipHeader%c column definition property has been depricated and will be removed in version 4.0, use %c headerTooltip%c instead.", "font-weight:bold;", "font-weight:regular;", "font-weight:bold;", "font-weight:regular;");
 
 		if(typeof this.definition.headerTooltip == "undefined"){
 			this.definition.headerTooltip = this.definition.tooltipHeader;
@@ -163,6 +196,40 @@ Column.prototype.reRegisterPosition = function(){
 	}
 };
 
+Column.prototype.setTooltip = function(){
+	var self = this,
+	def = self.definition;
+
+	//set header tooltips
+	var tooltip = def.headerTooltip || def.tooltip === false  ? def.headerTooltip : self.table.options.tooltipsHeader;
+
+	if(tooltip){
+		if(tooltip === true){
+			if(def.field){
+				self.table.extensions.localize.bind("columns|" + def.field, function(value){
+					self.element.attr("title", value || def.title);
+				});
+			}else{
+				self.element.attr("title", def.title);
+			}
+
+		}else{
+			if(typeof(tooltip) == "function"){
+				tooltip = tooltip(self.getComponent());
+
+				if(tooltip === false){
+					tooltip = "";
+				}
+			}
+
+			self.element.attr("title", tooltip);
+		}
+
+	}else{
+		self.element.attr("title", "");
+	}
+}
+
 //build header element
 Column.prototype._buildHeader = function(){
 	var self = this,
@@ -181,32 +248,7 @@ Column.prototype._buildHeader = function(){
 		self._buildColumnHeader();
 	}
 
-	//set header tooltips
-	var tooltip = def.headerTooltip || def.tooltip === false  ? def.headerTooltip : self.table.options.tooltipsHeader;
-
-	if(tooltip){
-		if(tooltip === true){
-			if(def.field){
-				self.table.extensions.localize.bind("columns." + def.field, function(value){
-					self.element.attr("title", value || def.title);
-				});
-			}else{
-				self.element.attr("title", def.title);
-			}
-
-		}else{
-			if(typeof(tooltip) == "function"){
-				tooltip = tooltip(self.getComponent());
-			}
-
-			self.element.attr("title", tooltip);
-		}
-
-	}else{
-		self.element.attr("title", "");
-	}
-
-
+	self.setTooltip();
 
 	//set resizable handles
 	if(self.table.options.resizableColumns && self.table.extExists("resizeColumns")){
@@ -238,6 +280,11 @@ Column.prototype._buildHeader = function(){
 		self.table.extensions.columnCalcs.initializeColumn(self);
 	}
 
+
+	//update header tooltip on mouse enter
+	self.element.on("mouseenter", function(e){
+		self.setTooltip();
+	});
 
 	//setup header click event bindings
 	if(typeof(def.headerClick) == "function"){
@@ -336,6 +383,19 @@ Column.prototype._buildHeader = function(){
 	if(typeof(def.cellTapHold) == "function"){
 		self.cellEvents.cellTapHold = def.cellTapHold;
 	}
+
+	//setup column cell edit callbacks
+	if(typeof(def.cellEdited) == "function"){
+		self.cellEvents.cellEdited = def.cellEdited;
+	}
+
+	if(typeof(def.cellEditing) == "function"){
+		self.cellEvents.cellEditing = def.cellEditing;
+	}
+
+	if(typeof(def.cellEditCancelled) == "function"){
+		self.cellEvents.cellEditCancelled = def.cellEditCancelled;
+	}
 };
 
 //build header element for header
@@ -367,27 +427,36 @@ Column.prototype._buildColumnHeader = function(){
 
 
 	//set column mutator
-	if(typeof def.mutator != "undefined" && table.extExists("mutator")){
+	if(table.extExists("mutator")){
 		table.extensions.mutator.initializeColumn(self);
 	}
 
 	//set column accessor
-	if(typeof def.accessor != "undefined" && table.extExists("accessor")){
+	if(table.extExists("accessor")){
 		table.extensions.accessor.initializeColumn(self);
+	}
+
+	//set respoviveLayout
+	if(typeof table.options.responsiveLayout && table.extExists("responsiveLayout")){
+		table.extensions.responsiveLayout.initializeColumn(self);
 	}
 
 	//set column visibility
 	if(typeof def.visible != "undefined"){
 		if(def.visible){
-			self.show();
+			self.show(true);
 		}else{
-			self.hide();
+			self.hide(true);
 		}
 	}
 
 	//asign additional css classes to column header
 	if(def.cssClass){
 		self.element.addClass(def.cssClass);
+	}
+
+	if(def.field){
+		this.element.attr("tabulator-field", def.field)
 	}
 
 	//set min width if present
@@ -440,7 +509,7 @@ Column.prototype._buildColumnHeaderTitle = function(){
 		titleHolderElement.append(titleElement);
 
 		if(def.field){
-			table.extensions.localize.bind("columns." + def.field, function(text){
+			table.extensions.localize.bind("columns|" + def.field, function(text){
 				titleElement.val(text || (def.title || "&nbsp"));
 			});
 		}else{
@@ -449,7 +518,7 @@ Column.prototype._buildColumnHeaderTitle = function(){
 
 	}else{
 		if(def.field){
-			table.extensions.localize.bind("columns." + def.field, function(text){
+			table.extensions.localize.bind("columns|" + def.field, function(text){
 				self._formatColumnHeaderTitle(titleHolderElement, text || (def.title || "&nbsp"));
 			});
 		}else{
@@ -585,10 +654,13 @@ Column.prototype.attachColumn = function(column){
 //vertically align header in column
 Column.prototype.verticalAlign = function(alignment){
 
-	if(this.parent.isGroup){
-		this.element.css("height", this.parent.getGroupElement().innerHeight())
-	}else{
-		this.element.css("height", this.parent.getHeadersElement().innerHeight())
+	//calculate height of column header and group holder element
+	var parentHeight = this.parent.isGroup ? this.parent.getGroupElement().innerHeight() : this.parent.getHeadersElement().innerHeight();
+
+	this.element.css("height", parentHeight);
+
+	if(this.isGroup){
+		this.groupElement.css("min-height", parentHeight - this.contentElement.outerHeight());
 	}
 
 	//vertically align cell contents
@@ -609,6 +681,7 @@ Column.prototype.verticalAlign = function(alignment){
 Column.prototype.clearVerticalAlign = function(){
 	this.element.css("padding-top","");
 	this.element.css("height","");
+	this.element.css("min-height","");
 
 	this.columns.forEach(function(column){
 		column.clearVerticalAlign();
@@ -713,7 +786,7 @@ Column.prototype.checkColumnVisibility = function(){
 };
 
 //show column
-Column.prototype.show = function(){
+Column.prototype.show = function(silent, responsiveToggle){
 	if(!this.visible){
 		this.visible = true;
 
@@ -731,16 +804,22 @@ Column.prototype.show = function(){
 			cell.show();
 		});
 
-		if(this.table.options.persistentLayout && this.table.extExists("persistentLayout", true)){
-			this.table.extensions.persistentLayout.save();
+		if(this.table.options.persistentLayout && this.table.extExists("responsiveLayout", true)){
+			this.table.extensions.persistence.save("columns");
 		}
 
-		this.table.options.groupVisibilityChanged(this.getComponent(), true);
+		if(!responsiveToggle && this.table.options.responsiveLayout && this.table.extExists("responsiveLayout", true)){
+			this.table.extensions.responsiveLayout.updateColumnVisibility(this, this.visible);
+		}
+
+		if(!silent){
+			this.table.options.columnVisibilityChanged(this.getComponent(), true);
+		}
 	}
 };
 
 //hide column
-Column.prototype.hide = function(){
+Column.prototype.hide = function(silent, responsiveToggle){
 	if(this.visible){
 		this.visible = false;
 
@@ -758,13 +837,31 @@ Column.prototype.hide = function(){
 			cell.hide();
 		});
 
-		if(this.table.options.persistentLayout && this.table.extExists("persistentLayout", true)){
-			this.table.extensions.persistentLayout.save();
+		if(this.table.options.persistentLayout && this.table.extExists("persistence", true)){
+			this.table.extensions.persistence.save("columns");
 		}
 
-		this.table.options.groupVisibilityChanged(this.getComponent(), false);
+		if(!responsiveToggle && this.table.options.responsiveLayout && this.table.extExists("responsiveLayout", true)){
+			this.table.extensions.responsiveLayout.updateColumnVisibility(this, this.visible);
+		}
+
+		if(!silent){
+			this.table.options.columnVisibilityChanged(this.getComponent(), false);
+		}
 	}
 };
+
+Column.prototype.matchChildWidths = function(){
+	var childWidth = 0;
+
+	if(this.contentElement && this.columns.length){
+		this.columns.forEach(function(column){
+			childWidth += column.getWidth();
+		});
+
+		this.contentElement.css("max-width", childWidth - 1);
+	}
+}
 
 Column.prototype.setWidth = function(width){
 	this.widthFixed = true;
@@ -772,6 +869,7 @@ Column.prototype.setWidth = function(width){
 };
 
 Column.prototype.setWidthActual = function(width){
+
 	if(isNaN(width)){
 		width = Math.floor((this.table.element.innerWidth()/100) * parseInt(width));
 	}
@@ -780,17 +878,18 @@ Column.prototype.setWidthActual = function(width){
 
 	this.width = width;
 
-	if(!this.isGroup){
-		this.element.css("width", width || "");
+	this.element.css("width", width || "");
 
+	if(!this.isGroup){
 		this.cells.forEach(function(cell){
 			cell.setWidth(width);
 		});
 	}
 
-  if (this.parent.isGroup) {
-    this.parent._updateGroupHeaderWidth();
-  }
+	if (this.parent.isGroup) {
+	    this.parent._updateGroupHeaderWidth();
+		//this.parent.matchChildWidths(); // base tabulator calls this instead
+	}
 
 	//set resizable handles
 	if(this.table.extExists("frozenColumns")){
@@ -871,16 +970,26 @@ Column.prototype.generateCell = function(row){
 	return cell;
 };
 
-Column.prototype.reinitializeWidth = function(){
+Column.prototype.reinitializeWidth = function(force){
 
 	this.widthFixed = false;
 
 	//set width if present
-	if(typeof this.definition.width !== "undefined"){
+	if(typeof this.definition.width !== "undefined" && !force){
 		this.setWidth(this.definition.width);
 	}
 
+	//hide header filters to prevent them altering column width
+	if(this.table.extExists("filter")){
+		this.table.extensions.filter.hideHeaderFilterElements();
+	}
+
 	this.fitToData();
+
+	//show header filters again after layout is complete
+	if(this.table.extExists("filter")){
+		this.table.extensions.filter.showHeaderFilterElements();
+	}
 }
 
 //set column width to maximum cell width

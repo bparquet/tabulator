@@ -25,12 +25,15 @@
 	 			height:false, //height of tabulator
 
 	 			layout:"fitData", ///layout type "fitColumns" | "fitData"
+	 			layoutColumnsOnNewData:false, //update column widths on setData
 	 			fitColumns:false, //DEPRICATED - fit colums to width of screen;
 
 	 			columnMinWidth:40, //minimum global width for a column
 	 			columnVertAlign:"top", //vertical alignment of column headers
 
 	 			resizableColumns:true, //resizable columns
+	 			resizableRows:false, //resizable rows
+	 			autoResize:true, //auto resize table
 
 	 			columns:[],//store for colum header info
 
@@ -38,6 +41,7 @@
 
 	 			tooltips: false, //Tool tip value
 	 			tooltipsHeader: false, //Tool tip for headers
+	 			tooltipGenerationMode:"load", //when to generate tooltips
 
 	 			initialSort:false, //initial sorting criteria
 
@@ -47,7 +51,20 @@
 
 	 			keybindings:[], //array for keybindings
 
-	 			downloadDataMutator:false, //function to manipulate table data before it is downloaded
+	 			clipboard:false, //enable clipboard
+	 			clipboardCopySelector:"active", //method of chosing which data is coppied to the clipboard
+	 			clipboardCopyFormatter:"table", //convert data to a clipboard string
+	 			clipboardCopyHeader:true, //include table headers in copt
+	 			clipboardPasteParser:"table", //convert pasted clipboard data to rows
+	 			clipboardPasteAction:"insert", //how to insert pasted data into the table
+
+	 			clipboardCopied:function(){}, //data has been copied to the clipboard
+	 			clipboardPasted:function(){}, //data has been pasted into the table
+	 			clipboardPasteError:function(){}, //data has not successfully been pasted into the table
+
+	 			downloadDataFormatter:false, //function to manipulate table data before it is downloaded
+	 			downloadReady:function(data, blob){return blob;}, //function to manipulate download data
+	 			downloadComplete:false, //function to manipulate download data
 
 	 			addRowPos:"bottom", //position to insert blank rows, top|bottom
 
@@ -65,17 +82,26 @@
 
 	 			virtualDom:true, //enable DOM virtualization
 
-	 			persistentLayout:false, //store cookie with column _styles
-	 			persistentLayoutID:"", //id for stored cookie
+	 			persistentLayout:false, //store column layout in memory
+	 			persistentSort:false, //store sorting in memory
+	 			persistentFilter:false, //store filters in memory
+	 			persistenceID:"", //key for persistent storage
+	 			persistenceMode:true, //mode for storing persistence information
+	 			persistentLayoutID:"",//DEPRICATED - key for persistent storage;
 
 	 			responsiveLayout:false, //responsive layout flags
+	 			responsiveLayoutCollapseStartOpen:true, //start showing collapsed data
+	 			responsiveLayoutCollapseUseFormatters:true, //responsive layout collapse formatter
+	 			responsiveLayoutCollapseFormatter:false, //responsive layout collapse formatter
 
 	 			pagination:false, //set pagination type
-	 			paginationSize:false, //set number of rows to a page
+				paginationSize:false, //set number of rows to a page
+				paginationButtonCount: 5, // set count of page button
 	 			paginationElement:false, //element to hold pagination numbers
 	 			paginationDataSent:{}, //pagination data sent to the server
 	 			paginationDataReceived:{}, //pagination data received from the server
 	 			paginator:false, //pagination url string builder
+	 			paginationAddRow: "page", //add rows on table or page
 
 	 			ajaxURL:false, //url for ajax loading
 	 			ajaxParams:{}, //params for ajax loading
@@ -85,6 +111,9 @@
 	 			ajaxLoaderError:false, //loader element
 	 			ajaxFiltering:false,
 	 			ajaxSorting:false,
+	 			ajaxProgressiveLoad:false, //progressive loading
+	 			ajaxProgressiveLoadDelay:0, //delay between requests
+	 			ajaxProgressiveLoadScrollMargin:0, //margin before scroll begins
 
 	 			groupBy:false, //enable table grouping and set field to group by
 				groupStartOpen:true, //starting state of group
@@ -92,7 +121,25 @@
 				groupHeader:false, //header generation function
 
 				movableColumns:false, //enable movable columns
+
 				movableRows:false, //enable movable rows
+				movableRowsConnectedTables:false, //tables for movable rows to be connected to
+				movableRowsSender:false,
+				movableRowsReceiver:"insert",
+				movableRowsSendingStart:function(){},
+				movableRowsSent:function(){},
+				movableRowsSentFailed:function(){},
+				movableRowsSendingStop:function(){},
+				movableRowsReceivingStart:function(){},
+				movableRowsReceived:function(){},
+				movableRowsReceivedFailed:function(){},
+				movableRowsReceivingStop:function(){},
+
+				scrollToRowPosition:"top",
+				scrollToRowIfVisible:true,
+
+				scrollToColumnPosition:"left",
+				scrollToColumnIfVisible:true,
 
 				rowFormatter:false,
 
@@ -120,8 +167,16 @@
 	 			rowSelectionChanged:function(){},
 	 			rowSelected:function(){},
 	 			rowDeselected:function(){},
+	 			rowResized:function(){},
 
 	 			//cell callbacks
+	 			//row callbacks
+	 			cellClick:false,
+	 			cellDblClick:false,
+	 			cellContext:false,
+	 			cellTap:false,
+	 			cellDblTap:false,
+	 			cellTapHold:false,
 	 			cellEditing:function(){},
 	 			cellEdited:function(){},
 	 			cellEditCancelled:function(){},
@@ -167,6 +222,8 @@
 	 			groupDblTap:false,
 	 			groupTapHold:false,
 
+	 			columnCalcs:true,
+
 	 			//pagination callbacks
 	 			pageLoaded:function(){},
 
@@ -175,6 +232,10 @@
 
 	 			//validation has failed
 	 			validationFailed:function(){},
+
+	 			//history callbacks
+	 			historyUndo:function(){},
+	 			historyRedo:function(){},
 
 	 		},
 
@@ -185,12 +246,31 @@
 	 				this.options.layout = "fitColumns";
 	 				console.warn("The%c fitColumns:true%c option has been depricated and will be removed in version 4.0, use %c layout:'fitColumns'%c instead.", "font-weight:bold;", "font-weight:regular;", "font-weight:bold;", "font-weight:regular;");
 	 			}
+
+	 			if(this.options.persistentLayoutID){
+	 				this.options.persistenceID = this.options.persistentLayoutID;
+	 				console.warn("The%c persistentLayoutID%c option has been depricated and will be removed in version 4.0, use %c persistenceID%c instead.", "font-weight:bold;", "font-weight:regular;", "font-weight:bold;", "font-weight:regular;");
+	 			}
+
+	 			if(this.options.persistentLayout === "cookie" || this.options.persistentLayout === "local"){
+	 				this.options.persistenceMode = this.options.persistentLayout;
+	 				this.options.persistentLayout = true;
+	 				console.warn("Setting the persistent storage mode on the%c persistentLayout%c option has been depricated and will be removed in version 4.0, use %c persistenceMode%c instead.", "font-weight:bold;", "font-weight:regular;", "font-weight:bold;", "font-weight:regular;");
+	 			}
+
+	 			if(this.options.downloadDataMutator){
+	 				this.options.downloadDataFormatter = this.options.downloadDataMutator;
+	 				console.warn("The%c downloadDataMutator%c option has been depricated and will be removed in version 4.0, use %cdownloadDataFormatter%c instead.", "font-weight:bold;", "font-weight:regular;", "font-weight:bold;", "font-weight:regular;");
+	 			}
+
 	 		},
 
 	 		//constructor
 	 		_create: function(){
 	 			var self = this,
 	 			element = this.element;
+
+	 			self._clearObjectPointers();
 
 	 			self._mapDepricatedFunctionality();
 
@@ -211,14 +291,16 @@
 
 	 				self._buildElement();
 
-	 				//give the browser a chance to fully render the table then load first data set if present
-	 				// setTimeout(function(){
-
-	 					//load initial data set
-	 					this._loadInitialData();
-
-	 				// },20)
+	 				//load initial data set
+	 				this._loadInitialData();
 	 			}
+	 		},
+
+	 		//clear pointers to objects in default config object
+
+	 		_clearObjectPointers: function(){
+	 			this.options.columns = this.options.columns.slice(0);
+	 			this.options.data = this.options.data.slice(0);
 	 		},
 
 
@@ -233,6 +315,14 @@
 	 			element.addClass("tabulator")
 	 			.attr("role", "grid")
 	 			.empty();
+
+	 			//set table height
+	 			if(options.height){
+	 				options.height = isNaN(options.height) ? options.height : options.height + "px";
+	 				this.element.css({"height": options.height});
+	 			}
+
+	 			this.rowManager.initialize();
 
 	 			this._detectBrowser();
 
@@ -256,12 +346,6 @@
 	 				options.placeholder = $("<div class='tabulator-placeholder'><span>" + options.placeholder + "</span></div>");
 	 			}
 
-	 			//set table height
-	 			if(options.height){
-	 				options.height = isNaN(options.height) ? options.height : options.height + "px";
-	 				this.element.css({"height": options.height});
-	 			}
-
 	 			//build table elements
 	 			element.append(this.columnManager.getElement());
 	 			element.append(this.rowManager.getElement());
@@ -272,9 +356,16 @@
 	 			}
 
 
-	 			if(options.persistentLayout && this.extExists("persistentLayout", true)){
-	 				ext.persistentLayout.initialize(options.persistentLayout, options.persistentLayoutID);
-	 				options.columns = ext.persistentLayout.load(options.columns);
+	 			if( (options.persistentLayout || options.persistentSort || options.persistentFilter) && this.extExists("persistence", true)){
+	 				ext.persistence.initialize(options.persistenceMode, options.persistenceID);
+	 			}
+
+	 			if(options.persistentLayout && this.extExists("persistence", true)){
+	 				options.columns = ext.persistence.load("columns", options.columns) ;
+	 			}
+
+	 			if(options.movableRows && this.extExists("moveRow")){
+	 				ext.moveRow.initialize();
 	 			}
 
 	 			if(this.extExists("columnCalcs")){
@@ -283,8 +374,36 @@
 
 	 			this.columnManager.setColumns(options.columns);
 
-	 			if(options.initialSort && this.extExists("sort", true)){
-	 				ext.sort.setSort(options.initialSort);
+	 			if(this.extExists("frozenRows")){
+	 				this.extensions.frozenRows.initialize();
+	 			}
+
+	 			if((options.persistentSort || options.initialSort) && this.extExists("sort", true)){
+	 				var sorters = [];
+
+	 				if(options.persistentSort && this.extExists("persistence", true)){
+	 					sorters = ext.persistence.load("sort");
+
+	 					if(sorters === false && options.initialSort){
+	 						sorters = options.initialSort;
+	 					}
+	 				}else if(options.initialSort){
+	 					sorters = options.initialSort;
+	 				}
+
+	 				ext.sort.setSort(sorters);
+	 			}
+
+	 			if(options.persistentFilter && this.extExists("persistence", true)){
+	 				var filters = ext.persistence.load("filter");
+
+	 				if(filters !== false){
+	 					this.setFilter(filters);
+	 				}
+	 			}
+
+	 			if(this.extExists("ajax")){
+	 				ext.ajax.initialize();
 	 			}
 
 	 			if(options.pagination && this.extExists("page", true)){
@@ -295,16 +414,20 @@
 	 				ext.groupRows.initialize();
 	 			}
 
-	 			if(this.extExists("ajax")){
-	 				ext.ajax.initialize();
-	 			}
-
 	 			if(this.extExists("keybindings")){
 	 				ext.keybindings.initialize();
 	 			}
 
 	 			if(this.extExists("selectRow")){
-	 				ext.selectRow.clearSelectionData();
+	 				ext.selectRow.clearSelectionData(true);
+	 			}
+
+	 			if(options.autoResize && this.extExists("resizeTable")){
+	 				ext.resizeTable.initialize();
+	 			}
+
+	 			if(this.extExists("clipboard")){
+	 				ext.clipboard.initialize();
 	 			}
 
 	 			options.tableBuilt();
@@ -315,19 +438,26 @@
 
 	 			if(self.options.pagination && self.extExists("page")){
 	 				self.extensions.page.reset(true);
-	 				self.extensions.page.setPage(1);
 
 	 				if(self.options.pagination == "local"){
-	 					self.rowManager.setData(self.options.data);
+	 					if(self.options.data.length){
+	 						self.rowManager.setData(self.options.data);
+	 					}else{
+	 						if(self.options.ajaxURL && self.extExists("ajax")){
+	 							self.extensions.ajax.loadData();
+	 						}else{
+	 							self.rowManager.setData(self.options.data);
+	 						}
+	 					}
+	 				}else{
+	 					self.extensions.page.setPage(1);
 	 				}
 	 			}else{
 	 				if(self.options.data.length){
 	 					self.rowManager.setData(self.options.data);
 	 				}else{
 	 					if(self.options.ajaxURL && self.extExists("ajax")){
-	 						self.extensions.ajax.sendRequest(function(data){
-	 							self.rowManager.setData(data);
-	 						});
+	 						self.extensions.ajax.loadData();
 	 					}else{
 	 						self.rowManager.setData(self.options.data);
 	 					}
@@ -344,8 +474,26 @@
 	 		_destroy: function(){
 	 			var element = this.element;
 
-	 			element.empty();
+	 			//clear row data
+	 			this.rowManager.rows.forEach(function(row){
+	 				row.wipe();
+	 			});
 
+	 			this.rowManager.rows = [];
+	 			this.rowManager.activeRows = [];
+	 			this.rowManager.displayRows = [];
+
+	 			//clear event bindings
+	 			if(this.options.autoResize && this.extExists("resizeTable")){
+	 				this.extensions.resizeTable.clearBindings();
+	 			}
+
+	 			if(this.extExists("keybindings")){
+	 				this.extensions.keybindings.clearBindings();
+	 			}
+
+	 			//clear DOM
+	 			element.empty();
 	 			element.removeClass("tabulator");
 	 		},
 
@@ -353,13 +501,16 @@
 	 			var ua = navigator.userAgent;
 
 	 			if(ua.indexOf("Trident") > -1){
-	 				this.brower = "ie";
+	 				this.browser = "ie";
 	 				this.browserSlow = true;
 	 			}else if(ua.indexOf("Edge") > -1){
-	 				this.brower = "edge";
+	 				this.browser = "edge";
 	 				this.browserSlow = true;
+	 			}else if(ua.indexOf("Firefox") > -1){
+	 				this.browser = "firefox";
+	 				this.browserSlow = false;
 	 			}else{
-	 				this.brower = "other";
+	 				this.browser = "other";
 	 				this.browserSlow = false;
 	 			}
 	 		},
@@ -368,14 +519,22 @@
 
 
 	 		//load data
+
 	 		setData:function(data, params, config){
-	 			var self = this;
+	 			if(this.extExists("ajax")){
+	 				this.extensions.ajax.blockActiveRequest();
+	 			}
+
+	 			this._setData(data, params, config);
+	 		},
+
+	 		_setData:function(data, params, config, inPosition){
 	 			var self = this;
 
 	 			if(typeof(data) === "string"){
 	 				if (data.indexOf("{") == 0 || data.indexOf("[") == 0){
 	 					//data is a json encoded string
-	 					self.rowManager.setData(JSON.parse(data));
+	 					self.rowManager.setData(JSON.parse(data), inPosition);
 	 				}else{
 
 	 					if(self.extExists("ajax", true)){
@@ -394,16 +553,14 @@
 	 							self.extensions.page.setPage(1);
 	 						}else{
 	 							//assume data is url, make ajax call to url to get data
-	 							self.extensions.ajax.sendRequest(function(data){
-	 								self.rowManager.setData(data);
-	 							});
+	 							self.extensions.ajax.loadData(inPosition);
 	 						}
 	 					}
 	 				}
 	 			}else{
 	 				if(data){
 	 					//asume data is already an object
-	 					self.rowManager.setData(data);
+	 					self.rowManager.setData(data, inPosition);
 	 				}else{
 
 	 					//no data provided, check if ajaxURL is present;
@@ -413,14 +570,12 @@
 	 							self.extensions.page.reset(true);
 	 							self.extensions.page.setPage(1);
 	 						}else{
-	 							self.extensions.ajax.sendRequest(function(data){
-	 								self.rowManager.setData(data);
-	 							});
+	 							self.extensions.ajax.loadData(inPosition);
 	 						}
 
 	 					}else{
 	 						//empty data
-	 						self.rowManager.setData([]);
+	 						self.rowManager.setData([], inPosition);
 	 					}
 	 				}
 	 			}
@@ -428,6 +583,10 @@
 
 	 		//clear data
 	 		clearData:function(){
+	 			if(this.extExists("ajax")){
+	 				this.extensions.ajax.blockActiveRequest();
+	 			}
+
 	 			this.rowManager.clearData();
 	 		},
 
@@ -435,6 +594,7 @@
 	 		getData:function(active){
 	 			return this.rowManager.getData(active);
 	 		},
+
 
 	 		//get table data array count
 	 		getDataCount:function(active){
@@ -453,10 +613,27 @@
 	 			}
 	 		},
 
+	 		//replace data, keeping table in position with same sort
+	 		replaceData:function(data, params, config){
+	 			if(this.extExists("ajax")){
+	 				this.extensions.ajax.blockActiveRequest();
+	 			}
+
+	 			this._setData(data, params, config, true);
+	 		},
+
 
 	 		//update table data
 	 		updateData:function(data){
 	 			var self = this;
+
+	 			if(this.extExists("ajax")){
+	 				this.extensions.ajax.blockActiveRequest();
+	 			}
+
+	 			if(typeof data === "string"){
+	 				data = JSON.parse(data);
+	 			}
 
 	 			if(data){
 	 				data.forEach(function(item){
@@ -472,8 +649,24 @@
 	 		},
 
 	 		addData:function(data, pos, index){
+	 			var rows = [], output = [];
+
+	 			if(this.extExists("ajax")){
+	 				this.extensions.ajax.blockActiveRequest();
+	 			}
+
+	 			if(typeof data === "string"){
+	 				data = JSON.parse(data);
+	 			}
+
 	 			if(data){
-	 				this.rowManager.addRows(data, pos, index);
+	 				rows = this.rowManager.addRows(data, pos, index);
+
+	 				rows.forEach(function(row){
+	 					output.push(row.getComponent());
+	 				});
+
+	 				return output;
 	 			}else{
 	 				console.warn("Update Error - No data provided");
 	 			}
@@ -482,17 +675,29 @@
 	 		//update table data
 	 		updateOrAddData:function(data){
 	 			var self = this;
+	 			var rows = [];
+
+	 			if(this.extExists("ajax")){
+	 				this.extensions.ajax.blockActiveRequest();
+	 			}
+
+	 			if(typeof data === "string"){
+	 				data = JSON.parse(data);
+	 			}
 
 	 			if(data){
 	 				data.forEach(function(item){
 	 					var row = self.rowManager.findRow(item[self.options.index]);
 
 	 					if(row){
-	 						row.updateData(item);
+	 						row.updateData(item)
+	 						rows.push(row.getComponent());
 	 					}else{
-	 						self.rowManager.addRow(item);
+	 						rows.push(self.rowManager.addRows(item)[0].getComponent());
 	 					}
 	 				})
+
+	 				return rows;
 	 			}else{
 	 				console.warn("Update Error - No data provided");
 	 			}
@@ -506,6 +711,18 @@
 	 				return row.getComponent();
 	 			}else{
 	 				console.warn("Find Error - No matching row found:", index);
+	 				return false;
+	 			}
+	 		},
+
+	 		//get row object
+	 		getRowFromPosition:function(position, active){
+	 			var row = this.rowManager.getRowFromPosition(position, active);
+
+	 			if(row){
+	 				return row.getComponent();
+	 			}else{
+	 				console.warn("Find Error - No matching row found:", position);
 	 				return false;
 	 			}
 	 		},
@@ -525,25 +742,51 @@
 
 	 		//add row to table
 	 		addRow:function(data, pos, index){
-	 			return this.rowManager.addRow(data, pos, index);
+
+	 			var row;
+
+	 			if(typeof data === "string"){
+	 				data = JSON.parse(data);
+	 			}
+
+	 			row = this.rowManager.addRows(data, pos, index)[0];
+
+	 			//recalc column calculations if present
+	 			if(this.extExists("columnCalcs")){
+	 				this.extensions.columnCalcs.recalc(this.rowManager.activeRows);
+	 			}
+
+	 			return row.getComponent();
 	 		},
 
 	 		//update a row if it exitsts otherwise create it
 	 		updateOrAddRow:function(index, data){
 	 			var row = this.rowManager.findRow(index);
 
+	 			if(typeof data === "string"){
+	 				data = JSON.parse(data);
+	 			}
+
 	 			if(row){
 	 				row.updateData(data);
 	 			}else{
-	 				row = this.rowManager.addRow(data);
-	 			}
+	 				row = this.rowManager.addRows(data)[0];
 
+	 				//recalc column calculations if present
+	 				if(this.extExists("columnCalcs")){
+	 					this.extensions.columnCalcs.recalc(this.rowManager.activeRows);
+	 				}
+	 			}
 	 			return row.getComponent();
 	 		},
 
 	 		//update row data
 	 		updateRow:function(index, data){
 	 			var row = this.rowManager.findRow(index);
+
+	 			if(typeof data === "string"){
+	 				data = JSON.parse(data);
+	 			}
 
 	 			if(row){
 	 				row.updateData(data);
@@ -555,11 +798,11 @@
 	 		},
 
 	 		//scroll to row in DOM
-	 		scrollToRow:function(index){
+	 		scrollToRow:function(index, position, ifVisible){
 	 			var row = this.rowManager.findRow(index);
 
 	 			if(row){
-	 				return this.rowManager.scrollToRow(row);
+	 				return this.rowManager.scrollToRow(row, position, ifVisible);
 	 			}else{
 	 				console.warn("Scroll Error - No matching row found:", index);
 	 				return false;
@@ -570,14 +813,33 @@
 	 			return this.rowManager.getComponents(active);
 	 		},
 
+	 		//get position of row in table
+	 		getRowPosition:function(index, active){
+	 			var row = this.rowManager.findRow(index);
+
+	 			if(row){
+	 				return this.rowManager.getRowPosition(row, active);
+	 			}else{
+	 				console.warn("Position Error - No matching row found:", index);
+	 				return false;
+	 			}
+	 		},
+
+	 		//copy table data to clipboard
+	 		copyToClipboard:function(selector, selectorParams, formatter, formatterParams){
+	 			if(this.extExists("clipboard", true)){
+	 				this.extensions.clipboard.copy(selector, selectorParams, formatter, formatterParams);
+	 			}
+	 		},
+
 	 		/////////////// Column Functions  ///////////////
 
 	 		setColumns:function(definition){
 	 			this.columnManager.setColumns(definition);
 	 		},
 
-	 		getColumns:function(){
-	 			return this.columnManager.getComponents();
+	 		getColumns:function(structured){
+	 			return this.columnManager.getComponents(structured);
 	 		},
 
 	 		getColumnDefinitions:function(){
@@ -585,14 +847,14 @@
 	 		},
 
 	 		getColumnLayout:function(){
-	 			if(this.extExists("persistentLayout", true)){
-	 				return this.extensions.persistentLayout.parseColumns(this.columnManager.getColumns());
+	 			if(this.extExists("persistence", true)){
+	 				return this.extensions.persistence.parseColumns(this.columnManager.getColumns());
 	 			}
 	 		},
 
 	 		setColumnLayout:function(layout){
-	 			if(this.extExists("persistentLayout", true)){
-	 				this.columnManager.setColumns(this.extensions.persistentLayout.mergeDefinition(this.options.columns, layout))
+	 			if(this.extExists("persistence", true)){
+	 				this.columnManager.setColumns(this.extensions.persistence.mergeDefinition(this.options.columns, layout))
 	 				return true;
 	 			}
 	 			return false;
@@ -603,6 +865,10 @@
 
 	 			if(column){
 	 				column.show();
+
+	 				if(this.options.responsiveLayout && this.extExists("responsiveLayout", true)){
+	 					this.extensions.responsiveLayout.update();
+	 				}
 	 			}else{
 	 				console.warn("Column Show Error - No matching column found:", field);
 	 				return false;
@@ -614,6 +880,10 @@
 
 	 			if(column){
 	 				column.hide();
+
+	 				if(this.options.responsiveLayout && this.extExists("responsiveLayout", true)){
+	 					this.extensions.responsiveLayout.update();
+	 				}
 	 			}else{
 	 				console.warn("Column Hide Error - No matching column found:", field);
 	 				return false;
@@ -652,6 +922,19 @@
 	 				return false;
 	 			}
 	 		},
+
+	 		//scroll to column in DOM
+	 		scrollToColumn:function(field, position, ifVisible){
+	 			var column = this.columnManager.findColumn(field);
+
+	 			if(column){
+	 				return this.columnManager.scrollToColumn(column, position, ifVisible);
+	 			}else{
+	 				console.warn("Scroll Error - No matching column found:", field);
+	 				return false;
+	 			}
+	 		},
+
 
 
 	 		//////////// Localization Functions  ////////////
@@ -742,13 +1025,38 @@
 	 			}
 	 		},
 
+	 		setHeaderFilterFocus:function(field){
+	 			if(this.extExists("filter", true)){
+	 				var column = this.columnManager.findColumn(field);
+
+	 				if(column){
+	 					this.extensions.filter.setHeaderFilterFocus(column);
+	 				}else{
+	 					console.warn("Column Filter Focus Error - No matching column found:", field);
+	 					return false;
+	 				}
+	 			}
+	 		},
+
+
+	 		setHeaderFilterValue:function(field, value){
+	 			if(this.extExists("filter", true)){
+	 				var column = this.columnManager.findColumn(field);
+
+	 				if(column){
+	 					this.extensions.filter.setHeaderFilterValue(column, value);
+	 				}else{
+	 					console.warn("Column Filter Error - No matching column found:", field);
+	 					return false;
+	 				}
+	 			}
+	 		},
+
 	 		getHeaderFilters:function(){
 	 			if(this.extExists("filter", true)){
 	 				return this.extensions.filter.getHeaderFilters();
 	 			}
 	 		},
-
-
 
 
 	 		//remove filter from array
@@ -877,7 +1185,7 @@
 	 			if(this.extExists("groupRows", true)){
 	 				this.options.groupBy = groups;
 	 				this.extensions.groupRows.initialize();
-	 				this.rowManager.refreshActiveData();
+	 				this.rowManager.refreshActiveData("display");
 	 			}else{
 	 				return false;
 	 			}
@@ -888,8 +1196,7 @@
 	 				this.options.groupStartOpen = values;
 	 				this.extensions.groupRows.initialize();
 	 				if(this.options.groupBy){
-
-	 					this.rowManager.refreshActiveData();
+	 					this.rowManager.refreshActiveData("group");
 	 				}else{
 	 					console.warn("Grouping Update - cant refresh view, no groups have been set");
 	 				}
@@ -903,7 +1210,7 @@
 	 				this.options.groupHeader = values;
 	 				this.extensions.groupRows.initialize();
 	 				if(this.options.groupBy){
-	 					this.rowManager.refreshActiveData();
+	 					this.rowManager.refreshActiveData("group");
 	 				}else{
 	 					console.warn("Grouping Update - cant refresh view, no groups have been set");
 	 				}
@@ -921,13 +1228,22 @@
 	 		},
 
 
+	 		///////////////// Column Calculation Functions ///////////////
+	 		getCalcResults:function(){
+	 			if(this.extExists("columnCalcs", true)){
+	 				return this.extensions.columnCalcs.getResults();
+	 			}else{
+	 				return false;
+	 			}
+	 		},
+
 	 		/////////////// Navigation Management //////////////
 
 	 		navigatePrev:function(){
 	 			var cell = false;
 
-	 			if(this.table.extExists("edit", true)){
-	 				cell = this.table.extensions.edit.currentCell;
+	 			if(this.extExists("edit", true)){
+	 				cell = this.extensions.edit.currentCell;
 
 	 				if(cell){
 	 					e.preventDefault();
@@ -941,8 +1257,8 @@
 	 		navigateNext:function(){
 	 			var cell = false;
 
-	 			if(this.table.extExists("edit", true)){
-	 				cell = this.table.extensions.edit.currentCell;
+	 			if(this.extExists("edit", true)){
+	 				cell = this.extensions.edit.currentCell;
 
 	 				if(cell){
 	 					e.preventDefault();
@@ -956,8 +1272,8 @@
 	 		navigateLeft:function(){
 	 			var cell = false;
 
-	 			if(this.table.extExists("edit", true)){
-	 				cell = this.table.extensions.edit.currentCell;
+	 			if(this.extExists("edit", true)){
+	 				cell = this.extensions.edit.currentCell;
 
 	 				if(cell){
 	 					e.preventDefault();
@@ -971,8 +1287,8 @@
 	 		navigateRight:function(){
 	 			var cell = false;
 
-	 			if(this.table.extExists("edit", true)){
-	 				cell = this.table.extensions.edit.currentCell;
+	 			if(this.extExists("edit", true)){
+	 				cell = this.extensions.edit.currentCell;
 
 	 				if(cell){
 	 					e.preventDefault();
@@ -986,8 +1302,8 @@
 	 		navigateUp:function(){
 	 			var cell = false;
 
-	 			if(this.table.extExists("edit", true)){
-	 				cell = this.table.extensions.edit.currentCell;
+	 			if(this.extExists("edit", true)){
+	 				cell = this.extensions.edit.currentCell;
 
 	 				if(cell){
 	 					e.preventDefault();
@@ -1001,8 +1317,8 @@
 	 		navigateDown:function(){
 	 			var cell = false;
 
-	 			if(this.table.extExists("edit", true)){
-	 				cell = this.table.extensions.edit.currentCell;
+	 			if(this.extExists("edit", true)){
+	 				cell = this.extensions.edit.currentCell;
 
 	 				if(cell){
 	 					e.preventDefault();
@@ -1037,6 +1353,12 @@
 	 			if(this.extExists("download", true)){
 	 				this.extensions.download.download(type, filename, options);
 	 			}
+	 		},
+
+	 		/////////// Inter Table Communications ///////////
+
+	 		tableComms:function(table, extension, action, data){
+	 			this.extensions.comms.receive(table, extension, action, data)
 	 		},
 
 	 		////////////// Extension Management //////////////
@@ -1101,6 +1423,7 @@
 
 	 	/*=include extensions/layout.js */
 	 	/*=include extensions/localize.js */
+	 	/*=include extensions/comms.js */
 
 	 	/*=include extensions_enabled.js */
 

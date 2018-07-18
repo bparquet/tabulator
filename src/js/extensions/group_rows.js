@@ -62,12 +62,13 @@ GroupComponent.prototype._getSelf = function(){
 //////////////// Group Functions /////////////////
 //////////////////////////////////////////////////
 
-var Group = function(groupManager, parent, level, key, generator, oldGroup){
+var Group = function(groupManager, parent, level, key, field, generator, oldGroup){
 
 	this.groupManager = groupManager;
 	this.parent = parent;
 	this.key = key;
 	this.level = level;
+	this.field = field;
 	this.hasSubGroups = level < (groupManager.groupIDLookups.length - 1);
 	this.addRow = this.hasSubGroups ? this._addRowToGroup : this._addRow;
 	this.type = "group"; //type of element
@@ -77,12 +78,14 @@ var Group = function(groupManager, parent, level, key, generator, oldGroup){
 	this.groupList = [];
 	this.generator = generator;
 	this.element = $("<div class='tabulator-row tabulator-group tabulator-group-level-" + level + "' role='rowgroup'></div>");
+	this.elementContents = $(""),
 	this.arrowElement = $("<div class='tabulator-arrow'></div>");
 	this.height = 0;
 	this.outerHeight = 0;
 	this.initialized = false;
 	this.calcs = {};
 	this.initialized = false;
+	this.extensions = {};
 
 	this.visible = oldGroup ? oldGroup.visible : (typeof groupManager.startOpen[level] !== "undefined" ? groupManager.startOpen[level] : groupManager.startOpen[0]);
 
@@ -92,16 +95,6 @@ var Group = function(groupManager, parent, level, key, generator, oldGroup){
 Group.prototype.addBindings = function(){
 	var self = this,
 	dblTap,	tapHold, tap, toggleElement;
-
-	if(self.groupManager.table.options.groupToggleElement){
-		toggleElement = self.groupManager.table.options.groupToggleElement == "arrow" ? self.arrowElement : self.element;
-
-		toggleElement.on("click", function(e){
-			e.stopPropagation();
-			e.stopImmediatePropagation();
-			self.toggleVisibility();
-		});
-	}
 
 
 	//handle group click events
@@ -185,6 +178,18 @@ Group.prototype.addBindings = function(){
 		});
 	}
 
+
+
+	if(self.groupManager.table.options.groupToggleElement){
+		toggleElement = self.groupManager.table.options.groupToggleElement == "arrow" ? self.arrowElement : self.element;
+
+		toggleElement.on("click", function(e){
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			self.toggleVisibility();
+		});
+	}
+
 };
 
 Group.prototype._addRowToGroup = function(row){
@@ -192,10 +197,10 @@ Group.prototype._addRowToGroup = function(row){
 	var level = this.level + 1;
 
 	if(this.hasSubGroups){
-		var groupID = this.groupManager.groupIDLookups[level](row.getData());
+		var groupID = this.groupManager.groupIDLookups[level].func(row.getData());
 
 		if(!this.groups[groupID]){
-			var group = new Group(this.groupManager, this, level, groupID, this.groupManager.headerGenerator[level] || this.groupManager.headerGenerator[0], this.old ? this.old.groups[groupID] : false);
+			var group = new Group(this.groupManager, this, level, groupID,  this.groupManager.groupIDLookups[level].field, this.groupManager.headerGenerator[level] || this.groupManager.headerGenerator[0], this.old ? this.old.groups[groupID] : false);
 
 			this.groups[groupID] = group;
 			this.groupList.push(group);
@@ -208,7 +213,106 @@ Group.prototype._addRowToGroup = function(row){
 
 Group.prototype._addRow = function(row){
 	this.rows.push(row);
+	row.extensions.group = this;
 };
+
+Group.prototype.insertRow = function(row, to, after){
+
+	var data = this.conformRowData({});
+
+	row.updateData(data);
+
+	var toIndex = this.rows.indexOf(to);
+
+	if(toIndex > -1){
+		if(after){
+			this.rows.splice(toIndex+1, 0, row);
+		}else{
+			this.rows.splice(toIndex, 0, row);
+		}
+	}else{
+		if(after){
+			this.rows.push(row);
+		}else{
+			this.rows.unshift(row);
+		}
+	}
+
+	row.extensions.group = this;
+
+	this.generateGroupHeaderContents();
+
+	if(this.groupManager.table.extExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
+		this.groupManager.table.extensions.columnCalcs.recalcGroup(this);
+	}
+};
+
+Group.prototype.getRowIndex = function(row){
+
+}
+
+//update row data to match grouping contraints
+Group.prototype.conformRowData = function(data){
+
+	if(this.field){
+		data[this.field] = this.key;
+	}else{
+		console.warn("Data Conforming Error - Cannot conform row data to match new group as groupBy is a function")
+	}
+
+	if(this.parent){
+		data = this.parent.conformRowData(data);
+	}
+
+	return data;
+};
+
+
+
+Group.prototype.removeRow = function(row){
+	var index = this.rows.indexOf(row);
+
+	if(index > -1){
+		this.rows.splice(index, 1)
+	}
+
+	if(!this.rows.length){
+		if(this.parent){
+			this.parent.removeGroup(this);
+		}else{
+			this.groupManager.removeGroup(this);
+		}
+
+		this.groupManager.updateGroupRows(true);
+	}else{
+		this.generateGroupHeaderContents();
+		if(this.groupManager.table.extExists("columnCalcs") && this.groupManager.table.options.columnCalcs != "table"){
+			this.groupManager.table.extensions.columnCalcs.recalcGroup(this);
+		}
+	}
+};
+
+Group.prototype.removeGroup = function(group){
+	var index;
+
+	if(this.groups[group.key]){
+		delete this.groups[group.key];
+
+		index = this.groupList.indexOf(group);
+
+		if(index > -1){
+			this.groupList.splice(index, 1)
+		}
+
+		if(!this.groupList.length){
+			if(this.parent){
+				this.parent.removeGroup(this);
+			}else{
+				this.groupManager.removeGroup(this);
+			}
+		}
+	}
+}
 
 Group.prototype.getHeadersAndRows = function(){
 	var output = [];
@@ -225,20 +329,20 @@ Group.prototype.getHeadersAndRows = function(){
 			});
 
 		}else{
-			if(this.groupManager.table.extExists("columnCalcs") && this.groupManager.table.extensions.columnCalcs.hasTopCalcs()){
+			if(this.groupManager.table.options.columnCalcs != "table" && this.groupManager.table.extExists("columnCalcs") && this.groupManager.table.extensions.columnCalcs.hasTopCalcs()){
 				this.calcs.top = this.groupManager.table.extensions.columnCalcs.generateTopRow(this.rows);
 				output.push(this.calcs.top);
 			}
 
 			output = output.concat(this.rows);
 
-			if(this.groupManager.table.extExists("columnCalcs") && this.groupManager.table.extensions.columnCalcs.hasBottomCalcs()){
+			if(this.groupManager.table.options.columnCalcs != "table" &&  this.groupManager.table.extExists("columnCalcs") && this.groupManager.table.extensions.columnCalcs.hasBottomCalcs()){
 				this.calcs.bottom = this.groupManager.table.extensions.columnCalcs.generateBottomRow(this.rows);
 				output.push(this.calcs.bottom);
 			}
 		}
 	}else{
-		if(!this.groupList.length && this.groupManager.table.options.groupClosedShowCalcs){
+		if(!this.groupList.length && this.groupManager.table.options.columnCalcs != "table" && this.groupManager.table.options.groupClosedShowCalcs){
 			if(this.groupManager.table.extExists("columnCalcs")){
 				if(this.groupManager.table.extensions.columnCalcs.hasTopCalcs()){
 					this.calcs.top = this.groupManager.table.extensions.columnCalcs.generateTopRow(this.rows)
@@ -286,13 +390,36 @@ Group.prototype.toggleVisibility = function(){
 Group.prototype.hide = function(){
 	this.visible = false;
 
-	if(this.groupManager.table.rowManager.getRenderMode() == "classic"){
+	if(this.groupManager.table.rowManager.getRenderMode() == "classic" && !this.groupManager.table.options.pagination){
 
 		this.element.removeClass("tabulator-group-visible");
 
-		this.rows.forEach(function(row){
-			row.getElement().detach();
-		});
+		if(this.groupList.length){
+			this.groupList.forEach(function(group){
+
+				if(group.calcs.top){
+					group.calcs.top.getElement().detach();
+				}
+
+				if(group.calcs.bottom){
+					group.calcs.bottom.getElement().detach();
+				}
+
+				var rows = group.getHeadersAndRows();
+
+				rows.forEach(function(row){
+					row.getElement().detach();
+				});
+			});
+
+		}else{
+			this.rows.forEach(function(row){
+				row.getElement().detach();
+			});
+		}
+
+		this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex())
+
 	}else{
 		this.groupManager.updateGroupRows(true);
 	}
@@ -305,14 +432,32 @@ Group.prototype.show = function(){
 
 	self.visible = true;
 
-	if(this.groupManager.table.rowManager.getRenderMode() == "classic"){
+	if(this.groupManager.table.rowManager.getRenderMode() == "classic" && !this.groupManager.table.options.pagination){
 
 		this.element.addClass("tabulator-group-visible");
 
-		self.rows.forEach(function(row){
-			self.getElement().after(row.getElement());
-			row.initialize();
-		});
+		var prev = self.getElement();
+
+		if(this.groupList.length){
+			this.groupList.forEach(function(group){
+				var rows = group.getHeadersAndRows();
+
+				rows.forEach(function(row){
+					prev.after(row.getElement());
+					row.initialize();
+					prev = row.getElement();
+				});
+			});
+
+		}else{
+			self.rows.forEach(function(row){
+				prev.after(row.getElement());
+				row.initialize();
+				prev = row.getElement();
+			});
+		}
+
+		this.groupManager.table.rowManager.setDisplayRows(this.groupManager.updateGroupRows(), this.groupManager.getDisplayIndex())
 	}else{
 		this.groupManager.updateGroupRows(true);
 	}
@@ -354,6 +499,18 @@ Group.prototype.getRowGroup = function(row){
 	return match;
 };
 
+Group.prototype.generateGroupHeaderContents = function(){
+	var data = [];
+
+	this.rows.forEach(function(row){
+		data.push(row.getData());
+	});
+
+	this.elementContents = this.generator(this.key, this.getRowCount(), data, this.getComponent());
+
+	this.element.empty().append(this.elementContents).prepend(this.arrowElement);
+}
+
 ////////////// Standard Row Functions //////////////
 
 Group.prototype.getElement = function(){
@@ -361,11 +518,6 @@ Group.prototype.getElement = function(){
 
 	this._visSet();
 
-	var data = [];
-
-	this.rows.forEach(function(row){
-		data.push(row.getData());
-	});
 
 	if(this.visible){
 		this.element.addClass("tabulator-group-visible");
@@ -375,7 +527,7 @@ Group.prototype.getElement = function(){
 
 	this.element.children().detach();
 
-	this.element.html(this.generator(this.key, this.getRowCount(), data, this.getComponent())).prepend(this.arrowElement);
+	this.generateGroupHeaderContents();
 
 	// this.addBindings();
 
@@ -415,6 +567,10 @@ Group.prototype.getHeight = function(){
 	return this.outerHeight;
 };
 
+Group.prototype.getGroup = function(){
+	return this;
+}
+
 Group.prototype.reinitializeHeight = function(){
 };
 Group.prototype.calcHeight = function(){
@@ -443,8 +599,8 @@ var GroupRows = function(table){
 	this.headerGenerator = [function(){return "";}];
 	this.groupList = []; //ordered list of groups
 	this.groups = {}; //hold row groups
+	this.displayIndex = 0; //index in display pipeline
 };
-
 
 //initialize group configuration
 GroupRows.prototype.initialize = function(){
@@ -456,21 +612,20 @@ GroupRows.prototype.initialize = function(){
 	self.headerGenerator = [function(){return "";}];
 	this.startOpen = [function(){return false;}]; //starting state of group
 
-	self.table.extensions.localize.bind("groups.item", function(langValue, lang){
+	self.table.extensions.localize.bind("groups|item", function(langValue, lang){
 		self.headerGenerator[0] = function(value, count, data){ //header layout function
-			return value + "<span>(" + count + " " + ((count === 1) ? langValue : lang.groups.items) + ")</span>";
+			return (typeof value === "undefined" ? "" : value) + "<span>(" + count + " " + ((count === 1) ? langValue : lang.groups.items) + ")</span>";
 		};
 	});
 
 	this.groupIDLookups = [];
 
-
 	if(Array.isArray(groupBy) || groupBy){
-		if(this.table.extExists("columnCalcs")){
+		if(this.table.extExists("columnCalcs") && this.table.options.columnCalcs != "table" && this.table.options.columnCalcs != "both"){
 			this.table.extensions.columnCalcs.removeCalcs();
 		}
 	}else{
-		if(this.table.extExists("columnCalcs")){
+		if(this.table.extExists("columnCalcs") && this.table.options.columnCalcs != "group"){
 
 			var cols = this.table.columnManager.getRealColumns();
 
@@ -511,7 +666,10 @@ GroupRows.prototype.initialize = function(){
 			}
 		}
 
-		self.groupIDLookups.push(lookupFunc);
+		self.groupIDLookups.push({
+			field: typeof group === "function" ? false : group,
+			func:lookupFunc,
+		});
 	});
 
 
@@ -537,6 +695,15 @@ GroupRows.prototype.initialize = function(){
 
 };
 
+GroupRows.prototype.setDisplayIndex = function(index){
+	this.displayIndex = index;
+}
+
+GroupRows.prototype.getDisplayIndex = function(){
+	return this.displayIndex;
+}
+
+
 //return appropriate rows with group headers
 GroupRows.prototype.getRows = function(rows){
 	if(this.groupIDLookups.length){
@@ -560,11 +727,9 @@ GroupRows.prototype.getRows = function(rows){
 GroupRows.prototype.getGroups = function(){
 	var groupComponents = [];
 
-	if(this.table.options.dataGrouped){
-		this.groupList.forEach(function(group){
-			groupComponents.push(group.getComponent());
-		});
-	}
+	this.groupList.forEach(function(group){
+		groupComponents.push(group.getComponent());
+	});
 
 	return groupComponents;
 };
@@ -595,20 +760,26 @@ GroupRows.prototype.generateGroups = function(rows){
 	self.groupList =[];
 
 	rows.forEach(function(row){
-
-		var groupID = self.groupIDLookups[0](row.getData());
-
-		if(!self.groups[groupID]){
-			var group = new Group(self, false, 0, groupID, self.headerGenerator[0], oldGroups[groupID]);
-
-			self.groups[groupID] = group;
-			self.groupList.push(group);
-		}
-
-		self.groups[groupID].addRow(row);
+		self.assignRowToGroup(row, oldGroups);
 	});
 
+}
 
+GroupRows.prototype.assignRowToGroup = function(row, oldGroups){
+	var groupID = this.groupIDLookups[0].func(row.getData()),
+	oldGroups = oldGroups || [],
+	newGroupNeeded = !this.groups[groupID];
+
+	if(newGroupNeeded){
+		var group = new Group(this, false, 0, groupID, this.groupIDLookups[0].field, this.headerGenerator[0], oldGroups[groupID]);
+
+		this.groups[groupID] = group;
+		this.groupList.push(group);
+	}
+
+	this.groups[groupID].addRow(row);
+
+	return !newGroupNeeded;
 }
 
 
@@ -623,10 +794,14 @@ GroupRows.prototype.updateGroupRows = function(force){
 
 	//force update of table display
 	if(force){
-		oldRowCount = self.table.rowManager.displayRowsCount;
 
-		self.table.rowManager.setDisplayRows(output);
-		self.table.rowManager._virtualRenderFill(Math.floor((self.table.rowManager.element.scrollTop() / self.table.rowManager.element[0].scrollHeight) * oldRowCount));
+		var displayIndex = self.table.rowManager.setDisplayRows(output, this.getDisplayIndex())
+
+		if(displayIndex !== true){
+			this.setDisplayIndex(displayIndex);
+		}
+
+		self.table.rowManager.refreshActiveData("group", true, true);
 	}
 
 	return output;
@@ -637,5 +812,19 @@ GroupRows.prototype.scrollHeaders = function(left){
 		group.arrowElement.css("margin-left", left);
 	});
 };
+
+GroupRows.prototype.removeGroup = function(group){
+	var index;
+
+	if(this.groups[group.key]){
+		delete this.groups[group.key];
+
+		index = this.groupList.indexOf(group);
+
+		if(index > -1){
+			this.groupList.splice(index, 1)
+		}
+	}
+}
 
 Tabulator.registerExtension("groupRows", GroupRows);

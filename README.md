@@ -1,6 +1,6 @@
 ![Tabluator Table](http://olifolkerd.github.io/tabulator/images/tabulator.png)
 
-### Version 3.3 Out Now!
+### Version 3.5 Out Now!
 
 An easy to use interactive table generation plugin for JQuery UI
 
@@ -54,8 +54,9 @@ npm install jquery.tabulator --save
 ### CDNJS
 To access Tabulator directly from the CDNJS CDN servers, include the following two lines at the start of your project, instead of the localy hosted versions:
 ```html
-<link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.3.2/css/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.3.2/js/tabulator.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.3/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/3.5.3/js/tabulator.min.js"></script>
+```
 
 Coming Soon
 ================================
@@ -68,7 +69,6 @@ Tabulator is actively under development and I plan to have even more useful feat
 - Print Styling
 - Drag Rows Between Tables
 - Multi Cell Editing
-- Resizable Rows
 - Cell Selection
 
 Get in touch if there are any features you feel Tabulator needs.

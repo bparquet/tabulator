@@ -44,9 +44,14 @@ CellComponent.prototype.restoreOldValue = function(){
 	this.cell.setValueActual(this.cell.getOldValue());
 };
 
-CellComponent.prototype.edit = function(){
-	this.cell.edit();
+CellComponent.prototype.edit = function(force){
+	return this.cell.edit(force);
 };
+
+CellComponent.prototype.cancelEdit = function(){
+	this.cell.cancelEdit(force);
+};
+
 
 CellComponent.prototype.nav = function(){
 	return this.cell.nav();
@@ -119,25 +124,56 @@ Cell.prototype._configureCell = function(){
 	}
 
 	//set event bindings
-	if (cellEvents.cellClick){
+	if (cellEvents.cellClick || self.table.options.cellClick){
 		self.element.on("click", function(e){
-			cellEvents.cellClick(e, self.getComponent());
+			var component = self.getComponent();
+
+			if(cellEvents.cellClick){
+				cellEvents.cellClick(e, component);
+			}
+
+			if(self.table.options.cellClick){
+				self.table.options.cellClick(e, component);
+			}
 		});
 	}
 
-	if (cellEvents.cellDblClick){
+	if (cellEvents.cellDblClick || this.table.options.cellDblClick){
 		self.element.on("dblclick", function(e){
-			cellEvents.cellDblClick(e, self.getComponent());
+			var component = self.getComponent();
+
+			if(cellEvents.cellDblClick){
+				cellEvents.cellDblClick(e, component);
+			}
+
+			if(self.table.options.cellDblClick){
+				self.table.options.cellDblClick(e, component);
+			}
 		});
 	}
 
-	if (cellEvents.cellContext){
+	if (cellEvents.cellContext || this.table.options.cellContext){
 		self.element.on("contextmenu", function(e){
-			cellEvents.cellContext(e, self.getComponent());
+			var component = self.getComponent();
+
+			if(cellEvents.cellContext){
+				cellEvents.cellContext(e, component);
+			}
+
+			if(self.table.options.cellContext){
+				self.table.options.cellContext(e, component);
+			}
 		});
 	}
 
-	if (cellEvents.cellTap){
+	if (this.table.options.tooltipGenerationMode === "hover"){
+		//update tooltip on mouse enter
+		self.element.on("mouseenter", function(e){
+			self._generateTooltip();
+		});
+	}
+
+	if (cellEvents.cellTap || this.table.options.cellTap){
 		tap = false;
 
 		self.element.on("touchstart", function(e){
@@ -146,14 +182,22 @@ Cell.prototype._configureCell = function(){
 
 		self.element.on("touchend", function(e){
 			if(tap){
-				cellEvents.cellTap(e, self.getComponent());
+				var component = self.getComponent();
+
+				if(cellEvents.cellTap){
+					cellEvents.cellTap(e, component);
+				}
+
+				if(self.table.options.cellTap){
+					self.table.options.cellTap(e, component);
+				}
 			}
 
 			tap = false;
 		});
 	}
 
-	if (cellEvents.cellDblTap){
+	if (cellEvents.cellDblTap || this.table.options.cellDblTap){
 		dblTap = null;
 
 		self.element.on("touchend", function(e){
@@ -162,7 +206,15 @@ Cell.prototype._configureCell = function(){
 				clearTimeout(dblTap);
 				dblTap = null;
 
-				cellEvents.cellDblTap(e, self.getComponent());
+				var component = self.getComponent();
+
+				if(cellEvents.cellDblTap){
+					cellEvents.cellDblTap(e, component);
+				}
+
+				if(self.table.options.cellDblTap){
+					self.table.options.cellDblTap(e, component);
+				}
 			}else{
 
 				dblTap = setTimeout(function(){
@@ -174,7 +226,7 @@ Cell.prototype._configureCell = function(){
 		});
 	}
 
-	if (cellEvents.cellTapHold){
+	if (cellEvents.cellTapHold || this.table.options.cellTapHold){
 		tapHold = null;
 
 		self.element.on("touchstart", function(e){
@@ -184,7 +236,15 @@ Cell.prototype._configureCell = function(){
 				clearTimeout(tapHold);
 				tapHold = null;
 				tap = false;
-				cellEvents.cellTapHold(e, self.getComponent());
+				var component = self.getComponent();
+
+				if(cellEvents.cellTapHold){
+					cellEvents.cellTapHold(e, component);
+				}
+
+				if(self.table.options.cellTapHold){
+					self.table.options.cellTapHold(e, component);
+				}
 			}, 1000)
 
 		});
@@ -231,6 +291,10 @@ Cell.prototype._generateTooltip = function(){
 			tooltip = self.value;
 		}else if(typeof(tooltip) == "function"){
 			tooltip = tooltip(self.getComponent());
+
+			if(tooltip === false){
+				tooltip = "";
+			}
 		}
 
 		self.element[0].setAttribute("title", tooltip);
@@ -257,14 +321,22 @@ Cell.prototype.getOldValue = function(){
 
 Cell.prototype.setValue = function(value, mutate){
 
-	var changed = this.setValueProcessData(value, mutate);
+	var changed = this.setValueProcessData(value, mutate),
+	component;
 
 	if(changed){
 		if(this.table.options.history && this.table.extExists("history")){
 			this.table.extensions.history.action("cellEdit", this, {oldValue:this.oldValue, newValue:this.value});
 		};
 
-		this.table.options.cellEdited(this.getComponent());
+		component = this.getComponent();
+
+		if(this.column.cellEvents.cellEdited){
+			this.column.cellEvents.cellEdited(component);
+		}
+
+		this.table.options.cellEdited(component);
+
 		this.table.options.dataEdited(this.table.rowManager.getData());
 	}
 
@@ -273,7 +345,7 @@ Cell.prototype.setValue = function(value, mutate){
 			if(this.table.options.groupBy && this.table.extExists("groupRows")){
 				this.table.extensions.columnCalcs.recalcRowGroup(this.row);
 			}else{
-				this.table.extensions.columnCalcs.recalc(this.table.rowManager.displayRows);
+				this.table.extensions.columnCalcs.recalc(this.table.rowManager.activeRows);
 			}
 		}
 	}
@@ -288,7 +360,7 @@ Cell.prototype.setValueProcessData = function(value, mutate){
 		changed = true;
 
 		if(mutate){
-			if(this.column.extensions.mutate && this.column.extensions.mutate.type !== "data"){
+			if(this.column.extensions.mutate){
 				value = this.table.extensions.mutator.transformCell(this, value);
 			}
 		}
@@ -363,8 +435,22 @@ Cell.prototype.hide = function(){
 	this.element[0].style.display = "none";
 };
 
-Cell.prototype.edit = function(){
-	this.element.focus();
+Cell.prototype.edit = function(force){
+	if(this.table.extExists("edit", true)){
+		return this.table.extensions.edit.editCell(this, false, force);
+	}
+};
+
+Cell.prototype.cancelEdit = function(){
+	if(this.table.extExists("edit", true)){
+		var editing = this.table.extensions.edit.getCurrentCell();
+
+		if(editing && editing._getSelf() === this){
+			this.table.extensions.edit.cancelEdit();
+		}else{
+			console.warn("Cancel Editor Error - This cell is not currently being edited ");
+		}
+	}
 };
 
 Cell.prototype["delete"] = function(){
@@ -383,12 +469,11 @@ Cell.prototype.nav = function(){
 
 	return {
 		next:function(){
-
 			var nextCell = this.right(),
 			nextRow;
 
 			if(!nextCell){
-				nextRow = self.table.rowManager.nextDisplayRow(self.row);
+				nextRow = self.table.rowManager.nextDisplayRow(self.row, true);
 
 				if(nextRow){
 					nextCell = nextRow.findNextEditableCell(-1);
@@ -403,14 +488,13 @@ Cell.prototype.nav = function(){
 			}
 
 			return false;
-
 		},
 		prev:function(){
 			var nextCell = this.left(),
 			prevRow;
 
 			if(!nextCell){
-				prevRow = self.table.rowManager.prevDisplayRow(self.row);
+				prevRow = self.table.rowManager.prevDisplayRow(self.row, true);
 
 				if(prevRow){
 					nextCell = prevRow.findPrevEditableCell(prevRow.cells.length);
@@ -426,7 +510,6 @@ Cell.prototype.nav = function(){
 			}
 
 			return false;
-
 		},
 		left:function(){
 
@@ -438,7 +521,6 @@ Cell.prototype.nav = function(){
 			}else{
 				return false;
 			}
-
 		},
 		right:function(){
 			nextCell = self.row.findNextEditableCell(index);
@@ -451,14 +533,14 @@ Cell.prototype.nav = function(){
 			}
 		},
 		up:function(){
-			var nextRow = self.table.rowManager.prevDisplayRow(self.row);
+			var nextRow = self.table.rowManager.prevDisplayRow(self.row, true);
 
 			if(nextRow){
 				nextRow.cells[index].edit();
 			}
 		},
 		down:function(){
-			var nextRow = self.table.rowManager.nextDisplayRow(self.row);
+			var nextRow = self.table.rowManager.nextDisplayRow(self.row, true);
 
 			if(nextRow){
 				nextRow.cells[index].edit();

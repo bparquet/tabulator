@@ -108,8 +108,8 @@ Localize.prototype.getLang = function(locale){
 
 //get text for current locale
 Localize.prototype.getText = function(path, value){
-	var path = value ? path + "." + value : path,
-	pathArray = path.split("."),
+	var path = value ? path + "|" + value : path,
+	pathArray = path.split("|"),
 	text = this._getLangElement(pathArray, this.locale);
 
 	// if(text === false){

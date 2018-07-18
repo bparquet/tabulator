@@ -13,9 +13,7 @@ History.prototype.clear = function(){
 
 History.prototype.action = function(type, component, data){
 
-	if(this.index > -1){
-		this.history = this.history.slice(0, this.index + 1);
-	}
+	this.history = this.history.slice(0, this.index + 1);
 
 	this.history.push({
 		type:type,
@@ -29,19 +27,19 @@ History.prototype.action = function(type, component, data){
 History.prototype.undo = function(){
 
 	if(this.index > -1){
-
 		let action = this.history[this.index];
 
 		this.undoers[action.type].call(this, action);
 
 		this.index--;
 
+		this.table.options.historyUndo(action.type, action.component.getComponent(), action.data);
+
 		return true;
 	}else{
 		console.warn("History Undo Error - No more history to undo");
 		return false;
 	}
-
 };
 
 History.prototype.redo = function(){
@@ -52,6 +50,8 @@ History.prototype.redo = function(){
 		let action = this.history[this.index];
 
 		this.redoers[action.type].call(this, action);
+
+		this.table.options.historyRedo(action.type, action.component.getComponent(), action.data);
 
 		return true;
 	}else{
@@ -67,13 +67,19 @@ History.prototype.undoers = {
 	},
 
 	rowAdd: function(action){
-		action.component["delete"]();
+		//action.component["delete"]();
+		action.component.deleteActual();
 	},
 
 	rowDelete: function(action){
 		var newRow = this.table.rowManager.addRowActual(action.data.data, action.data.pos, action.data.index);
 
 		this._rebindRow(action.component, newRow);
+	},
+
+	rowMove: function(action){
+		this.table.rowManager.moveRowActual(action.component, this.table.rowManager.rows[action.data.pos], false);
+		this.table.rowManager.redraw();
 	},
 };
 
@@ -90,7 +96,13 @@ History.prototype.redoers = {
 	},
 
 	rowDelete:function(action){
-		action.component["delete"]();
+		//action.component["delete"]();
+		action.component.deleteActual();
+	},
+
+	rowMove: function(action){
+		this.table.rowManager.moveRowActual(action.component, this.table.rowManager.rows[action.data.pos], false);
+		this.table.rowManager.redraw();
 	},
 };
 

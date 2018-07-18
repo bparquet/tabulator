@@ -1,52 +1,52 @@
+@import "functions4.scss";
+@import "variables4.scss";
+
+// Style conversion file, bootstrap to tabulator
 
 //Main Theme Variables
-$backgroundColor: #fff; //background color of tabulator
-$borderColor:#222; //border to tablulator
-$textSize:14px; //table text size
+$backgroundColor: $table-bg; //background color of tabulator
+$borderColor:$table-border-color; //border to tablulator
+$textSize:$font-size-base; //table text size
 
 //header themeing
-$headerBackgroundColor:#222; //border to tablulator
-$headerTextColor:#fff; //header text colour
-$headerBorderColor:#aaa;  //header border color
-$headerSeperatorColor:#3FB449; //header bottom seperator color
-$headerMargin:4px; //padding round header
+$headerBackgroundColor:#fff; //border to tablulator
+$headerSeperatorColor:$table-border-color; //header bottom seperator color
+
+$cellPadding:$table-cell-padding; //padding round header
 
 //column header arrows
-$sortArrowActive: #3FB449;
+$sortArrowActive: #666;
 $sortArrowInactive: #bbb;
 
 //row themeing
-$rowBackgroundColor:#fff; //table row background color
-$rowAltBackgroundColor:#EFEFEF; //table row background color
-$rowBorderColor:#aaa; //table border color
-$rowTextColor:#333; //table text color
-$rowHoverBackground:#bbb; //row background color on hover
+$rowBackgroundColor:$backgroundColor; //table row background color
+$rowAltBackgroundColor: $table-accent-bg; //table row background color
+$rowBorderColor:$table-border-color; //table border color
+$rowHoverBackground:$table-hover-bg; //row background color on hover
 
 $rowSelectedBackground: #9ABCEA; //row background color when selected
 $rowSelectedBackgroundHover: #769BCC;//row background color when selected and hovered
+
 
 $editBoxColor:#1D68CD; //border color for edit boxes
 $errorColor:#dd0000; //error indication
 
 //footer themeing
-$footerBackgroundColor:#222; //border to tablulator
-$footerTextColor:#222; //footer text colour
-$footerBorderColor:#aaa; //footer border color
-$footerSeperatorColor:#3FB449; //footer bottom seperator color
+$footerBorderColor:$pagination-border-color; //footer border color
+$footerSeperatorColor:$table-border-color; //footer bottom seperator color
 
 
 
 //Tabulator Containing Element
 .tabulator{
 	position: relative;
-
-	border-bottom: 5px solid $borderColor;
-
 	background-color: $backgroundColor;
-
+	overflow:hidden;
 	font-size:$textSize;
 	text-align: left;
-	overflow:hidden;
+	width: 100%;
+	max-width: 100%;
+	// margin-bottom: $line-height-computed;
 
 	-webkit-transform: translatez(0);
 	-moz-transform: translatez(0);
@@ -62,17 +62,6 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 		}
 	}
 
-	&[tabulator-layout="fitColumns"]{
-		.tabulator-row{
-			.tabulator-cell{
-				&:last-of-type{
-					border-right: none;
-				}
-			}
-		}
-	}
-
-
 	&.tabulator-block-select{
 		user-select: none;
 	}
@@ -84,9 +73,9 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 
 		width:100%;
 
-		border-bottom:3px solid $headerSeperatorColor;
+		border-top:1px solid $headerSeperatorColor;
+		border-bottom:2px solid $headerSeperatorColor;
 		background-color: $headerBackgroundColor;
-		color: $headerTextColor;
 		font-weight:bold;
 
 		white-space: nowrap;
@@ -100,10 +89,8 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 		//individual column header element
 		.tabulator-col{
 			display:inline-block;
-
 			position:relative;
 			box-sizing:border-box;
-			border-right:1px solid $headerBorderColor;
 			background-color: $headerBackgroundColor;
 			text-align:left;
 			vertical-align: bottom;
@@ -120,7 +107,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 			.tabulator-col-content{
 				box-sizing:border-box;
 				position: relative;
-				padding:8px;
+				padding:$cellPadding;
 
 				//hold title of column header
 				.tabulator-col-title{
@@ -168,7 +155,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 					position:relative;
 					display: flex;
 
-					border-top:1px solid $headerBorderColor;
+					border-top:1px solid $borderColor;
 					overflow: hidden;
 
 					.tabulator-col:last-child{
@@ -176,6 +163,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 					}
 				}
 			}
+
 
 			//hide left resize handle on first column
 			&:first-child{
@@ -187,8 +175,8 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 			//placeholder element for sortable columns
 			&.ui-sortable-helper{
 				position: absolute;
-				background-color: $headerBackgroundColor !important;
-				border:1px solid $headerBorderColor;
+				background-color:darken($headerBackgroundColor, 10%) !important;
+				border:1px solid $borderColor;
 			}
 
 			//header filter containing element
@@ -215,6 +203,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 					}
 				}
 			}
+
 
 			//styling child elements for sortable columns
 			&.tabulator-sortable{
@@ -270,12 +259,12 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 
 		.tabulator-calcs-holder{
 			box-sizing:border-box;
-			min-width:200%;
+			width:100%;
 
-			background:lighten($headerBackgroundColor, 10%) !important;
+			background:lighten($headerBackgroundColor, 5%) !important;
 
 			.tabulator-row{
-				background:lighten($headerBackgroundColor, 10%) !important;
+				background:lighten($headerBackgroundColor, 5%) !important;
 
 				.tabulator-col-resize-handle{
 					display: none;
@@ -283,7 +272,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 			}
 
 			border-top:1px solid $rowBorderColor;
-			// border-bottom:1px solid $headerBorderColor;
+			border-bottom:1px solid $headerSeperatorColor;
 
 			overflow: hidden;
 		}
@@ -296,6 +285,8 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 			}
 		}
 	}
+
+
 
 	//scrolling element to hold table
 	.tabulator-tableHolder{
@@ -330,7 +321,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 				margin:0 auto;
 				padding:10px;
 
-				color:$headerSeperatorColor;
+				color:#000;
 				font-weight: bold;
 				font-size: 20px;
 			}
@@ -343,104 +334,24 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 			background-color:$rowBackgroundColor;
 			white-space: nowrap;
 			overflow:visible;
-			color:$rowTextColor;
 
 			.tabulator-row{
 				&.tabulator-calcs{
 					font-weight: bold;
-					background:lighten($headerBackgroundColor, 15%) !important;
-					color:$headerTextColor;
+					background:darken($rowAltBackgroundColor, 5%) !important;
+
+					&.tabulator-calcs-top{
+						border-bottom:2px solid $rowBorderColor;
+					}
+
+					&.tabulator-calcs-bottom{
+						border-top:2px solid $rowBorderColor;
+					}
 				}
 			}
 		}
 	}
 
-
-	//footer element
-	.tabulator-footer{
-		padding:5px 10px;
-		padding-top:8px;
-		border-top:3px solid $footerSeperatorColor;
-		background-color: $footerBackgroundColor;
-		text-align:right;
-		color: $footerTextColor;
-		font-weight:bold;
-		white-space:nowrap;
-		user-select:none;
-
-		-moz-user-select: none;
-		-khtml-user-select: none;
-		-webkit-user-select: none;
-		-o-user-select: none;
-
-		.tabulator-calcs-holder{
-			box-sizing:border-box;
-			width:calc(100% + 20px);
-			margin:-8px -10px 8px -10px;
-
-			text-align: left;
-
-			background:lighten($footerBackgroundColor, 10%) !important;
-
-			.tabulator-row{
-				background:lighten($footerBackgroundColor, 10%) !important;
-				color:$headerTextColor !important;
-
-				.tabulator-col-resize-handle{
-					display: none;
-				}
-			}
-
-			// border-top:1px solid $rowBorderColor;
-			border-bottom:1px solid $rowBorderColor;
-
-			overflow: hidden;
-
-			&:only-child{
-				margin-bottom:-5px;
-				border-bottom:none;
-			}
-		}
-
-		//pagination container element
-		.tabulator-pages{
-			margin:0 7px;
-		}
-
-		//pagination button
-		.tabulator-page{
-			display:inline-block;
-
-			margin:0 2px;
-			padding:2px 5px;
-
-			border:1px solid $footerBorderColor;
-			border-radius:3px;
-
-			background:#fff;
-
-			color: $footerTextColor;
-			font-family:inherit;
-			font-weight:inherit;
-			font-size:inherit;
-
-			&.active{
-				color:$footerSeperatorColor;
-			}
-
-			&:disabled{
-				opacity:.5;
-			}
-
-			&:not(.disabled){
-				&:hover{
-					cursor:pointer;
-					background:rgba(0,0,0,.2);
-					color:#fff;
-				}
-			}
-		}
-	}
 
 	//column resize handles
 	.tabulator-col-resize-handle{
@@ -460,6 +371,105 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 		}
 	}
 
+
+	//footer element
+	.tabulator-footer{
+		padding:5px 10px;
+		border-top:2px solid $footerSeperatorColor;
+		text-align:right;
+		font-weight:bold;
+		white-space:nowrap;
+		user-select:none;
+
+		-moz-user-select: none;
+		-khtml-user-select: none;
+		-webkit-user-select: none;
+		-o-user-select: none;
+
+		.tabulator-calcs-holder{
+			box-sizing:border-box;
+			width:calc(100% + 20px);
+			margin:-5px -10px 5px -10px;
+
+			text-align: left;
+
+			background:lighten($backgroundColor, 5%) !important;
+
+			.tabulator-row{
+				background:lighten($backgroundColor, 5%) !important;
+
+				.tabulator-col-resize-handle{
+					display: none;
+				}
+			}
+
+			border-bottom:1px solid $rowBorderColor;
+			border-top:1px solid $rowBorderColor;
+
+			overflow: hidden;
+
+			&:only-child{
+				margin-bottom:-5px;
+				border-bottom:none;
+			}
+		}
+
+		//pagination container element
+		.tabulator-pages{
+			// margin:0 7px;
+		}
+
+		//pagination button
+		.tabulator-page{
+			display:inline-block;
+
+			margin:0;
+			margin-top:5px;
+			padding:8px 12px;
+
+			border:1px solid $footerBorderColor;
+			border-right:none;
+
+			background:rgba(255,255,255,.2);
+
+			color: $pagination-color;
+			font-family:inherit;
+			font-weight:normal;
+			font-size:inherit;
+
+			&[data-page="first"]{
+				border-top-left-radius:4px;
+				border-bottom-left-radius:4px;
+			}
+
+			&[data-page="last"]{
+				border:1px solid $footerBorderColor;
+				border-top-right-radius:4px;
+				border-bottom-right-radius:4px;
+			}
+
+			&.active{
+				border-color:$pagination-active-border-color;
+				background-color:$pagination-active-bg;
+				color:$pagination-active-color;
+			}
+
+			&:disabled{
+				border-color:$pagination-disabled-border-color;
+				background:$pagination-disabled-bg;
+				color:$pagination-disabled-color;
+			}
+
+			&:not(.disabled){
+				&:hover{
+					cursor:pointer;
+					border-color:$pagination-hover-border-color;
+					background:$pagination-hover-bg;
+					color:$pagination-hover-color;
+				}
+			}
+		}
+	}
 
 	//holding div that contains loader and covers tabulator element to prevent interaction
 	.tablulator-loader{
@@ -502,19 +512,269 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 			}
 		}
 	}
+
+
+
+	//Bootstrap theming classes
+
+	&.thead-dark{
+		.tabulator-header{
+			border-color: $table-dark-border-color;
+			background-color: $table-dark-bg;
+			color: $table-dark-color;
+
+			.tabulator-col{
+				border-color: $table-dark-border-color;
+				background-color: $table-dark-bg;
+				color: $table-dark-color;
+			}
+		}
+	}
+
+	&.table-dark{
+		background-color: $table-dark-bg;
+
+		&:not(.thead-light) .tabulator-header{
+			border-color: $table-dark-border-color;
+			background-color: $table-dark-bg;
+			color: $table-dark-color;
+
+			.tabulator-col{
+				border-color: $table-dark-border-color;
+				background-color: $table-dark-bg;
+				color: $table-dark-color;
+			}
+		}
+
+		.tabulator-tableHolder{
+			color: $table-dark-color;
+		}
+
+
+		.tabulator-row{
+			border-color: $table-dark-border-color;
+
+			&:hover{
+				background-color: $table-dark-hover-bg !important;
+			}
+		}
+	}
+
+	&.table-striped{
+		.tabulator-row{
+			&:nth-child(even){
+				background-color: $rowAltBackgroundColor;
+
+				&.tabulator-selected{
+					background-color:$rowSelectedBackground;
+				}
+
+				&.tabulator-selectable:hover{
+					background-color:$rowHoverBackground;
+					cursor: pointer;
+				}
+
+				&.tabulator-selected:hover{
+					background-color:$rowSelectedBackgroundHover;
+					cursor: pointer;
+				}
+			}
+		}
+
+		&.table-dark{
+			.tabulator-row{
+				&:nth-child(even){
+					background-color: $table-dark-accent-bg;
+				}
+			}
+		}
+	}
+
+	&.table-bordered{
+		border:1px solid $borderColor;
+
+		.tabulator-header{
+			.tabulator-col{
+				border-right:1px solid $borderColor;
+			}
+		}
+
+		.tabulator-tableHolder{
+			.tabulator-table{
+				.tabulator-row{
+					.tabulator-cell{
+						border-right:1px solid $borderColor;
+					}
+				}
+			}
+		}
+	}
+
+
+	&.table-borderless{
+		.tabulator-header{
+			border:none;
+		}
+
+		.tabulator-row{
+			border:none;
+		}
+	}
+
+	&.table-sm{
+		.tabulator-header{
+			.tabulator-col{
+				.tabulator-col-content{
+					padding:$table-cell-padding-sm !important;
+				}
+			}
+		}
+
+		.tabulator-tableHolder{
+			.tabulator-table{
+				.tabulator-row{
+					min-height:$textSize + ($table-cell-padding-sm * 2);
+
+					.tabulator-cell{
+						padding:$table-cell-padding-sm !important;
+					}
+				}
+			}
+		}
+	}
+
+
+	//row colors
+	.tabulator-tableHolder{
+		.tabulator-table{
+			.tabulator-row{
+				&.table-primary{
+					background:theme-color-level("primary", -9) !important;
+				}
+				&.table-secondary{
+					background:theme-color-level("secondary", -9) !important;
+				}
+				&.table-success{
+					background:theme-color-level("success", -9) !important;
+				}
+				&.table-info{
+					background:theme-color-level("info", -9) !important;
+				}
+				&.table-warning{
+					background:theme-color-level("warning", -9) !important;
+				}
+				&.table-danger{
+					background:theme-color-level("danger", -9) !important;
+				}
+				&.table-light{
+					background:theme-color-level("light", -9) !important;
+				}
+				&.table-dark{
+					background:theme-color-level("dark", -9) !important;
+				}
+				&.table-active{
+					background:$table-active-bg !important;
+				}
+
+				&.bg-primary{
+					background:theme-color-level("primary", 0) !important;
+				}
+				&.bg-secondary{
+					background:theme-color-level("secondary", 0) !important;
+				}
+				&.bg-success{
+					background:theme-color-level("success", 0) !important;
+				}
+				&.bg-info{
+					background:theme-color-level("info", 0) !important;
+				}
+				&.bg-warning{
+					background:theme-color-level("warning", 0) !important;
+				}
+				&.bg-danger{
+					background:theme-color-level("danger", 0) !important;
+				}
+				&.bg-light{
+					background:theme-color-level("light", 0) !important;
+				}
+				&.bg-dark{
+					background:theme-color-level("dark", 0) !important;
+				}
+				&.bg-active{
+					background:$table-active-bg !important;
+				}
+
+				.tabulator-cell{
+					&.table-primary{
+						background:theme-color-level("primary", -9) !important;
+					}
+					&.table-secondary{
+						background:theme-color-level("secondary", -9) !important;
+					}
+					&.table-success{
+						background:theme-color-level("success", -9) !important;
+					}
+					&.table-info{
+						background:theme-color-level("info", -9) !important;
+					}
+					&.table-warning{
+						background:theme-color-level("warning", -9) !important;
+					}
+					&.table-danger{
+						background:theme-color-level("danger", -9) !important;
+					}
+					&.table-light{
+						background:theme-color-level("light", -9) !important;
+					}
+					&.table-dark{
+						background:theme-color-level("dark", -9) !important;
+					}
+					&.table-active{
+						background:$table-active-bg !important;
+					}
+
+					&.bg-primary{
+						background:theme-color-level("primary", 0) !important;
+					}
+					&.bg-secondary{
+						background:theme-color-level("secondary", 0) !important;
+					}
+					&.bg-success{
+						background:theme-color-level("success", 0) !important;
+					}
+					&.bg-info{
+						background:theme-color-level("info", 0) !important;
+					}
+					&.bg-warning{
+						background:theme-color-level("warning", 0) !important;
+					}
+					&.bg-danger{
+						background:theme-color-level("danger", 0) !important;
+					}
+					&.bg-light{
+						background:theme-color-level("light", 0) !important;
+					}
+					&.bg-dark{
+						background:theme-color-level("dark", 0) !important;
+					}
+					&.bg-active{
+						background:$table-active-bg !important;
+					}
+				}
+			}
+		}
+	}
+
 }
 
 //row element
 .tabulator-row{
 	position: relative;
 	box-sizing: border-box;
-	min-height:$textSize + ($headerMargin * 2);
+
+	min-height:$textSize + ($cellPadding * 2);
 	background-color: $rowBackgroundColor;
-
-
-	&.tabulator-row-even{
-		background-color: $rowAltBackgroundColor;
-	}
+	border-bottom:1px solid $rowBorderColor;
 
 	&.tabulator-selectable:hover{
 		background-color:$rowHoverBackground;
@@ -528,11 +788,6 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 	&.tabulator-selected:hover{
 		background-color:$rowSelectedBackgroundHover;
 		cursor: pointer;
-	}
-
-	&.tabulator-row-moving{
-		border:1px solid #000;
-		background:#fff;
 	}
 
 	&.tabulator-moving{
@@ -612,13 +867,15 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 		display:inline-block;
 		position: relative;
 		box-sizing:border-box;
-		padding:6px;
-		border-right:1px solid $rowBorderColor;
+		padding:$cellPadding;
 		vertical-align:middle;
 		white-space:nowrap;
 		overflow:hidden;
 		text-overflow:ellipsis;
 
+		&:last-of-type{
+			border-right: none;
+		}
 
 		&.tabulator-editing{
 			border:1px solid  $editBoxColor;
@@ -667,7 +924,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 					width:100%;
 					height:3px;
 					margin-top:2px;
-					background:$sortArrowActive;
+					background:#666;
 				}
 			}
 		}
@@ -714,21 +971,21 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 
 	//row grouping element
 	&.tabulator-group{
+
 		box-sizing:border-box;
+		border-bottom:1px solid #999;
 		border-right:1px solid $rowBorderColor;
-		border-top:1px solid #000;
-		border-bottom:2px solid $headerSeperatorColor;
+		border-top:1px solid #999;
 		padding:5px;
 		padding-left:10px;
-		background:$headerBackgroundColor;
-		color:$headerTextColor;
+		background:#fafafa;
 		font-weight:bold;
 
 		min-width: 100%;
 
 		&:hover{
 			cursor:pointer;
-			background-color:darken($headerBackgroundColor, 10%);
+			background-color:rgba(0,0,0,.1);
 		}
 
 		&.tabulator-group-visible{
@@ -786,8 +1043,7 @@ $footerSeperatorColor:#3FB449; //footer bottom seperator color
 
 		span{
 			margin-left:10px;
-			color:$headerSeperatorColor;
+			color:#666;
 		}
 	}
-
 }

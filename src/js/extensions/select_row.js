@@ -5,10 +5,14 @@ var SelectRow = function(table){
 	this.selectedRows = []; //hold selected rows
 };
 
-SelectRow.prototype.clearSelectionData = function(){
+SelectRow.prototype.clearSelectionData = function(silent){
 	this.selecting = false;
 	this.selectPrev = [];
 	this.selectedRows = [];
+
+	if(!silent){
+		this._rowSelectionChanged();
+	}
 };
 
 SelectRow.prototype.initializeRow = function(row){
@@ -94,7 +98,7 @@ SelectRow.prototype.selectRows = function(rows){
 	switch(typeof rows){
 		case "undefined":
 		self.table.rowManager.rows.forEach(function(row){
-			self._selectRow(row, true, true);
+			self._selectRow(row, false, true);
 		});
 
 		self._rowSelectionChanged();
@@ -103,7 +107,7 @@ SelectRow.prototype.selectRows = function(rows){
 		case "boolean":
 		if(rows === true){
 			self.table.rowManager.activeRows.forEach(function(row){
-				self._selectRow(row, true, true);
+				self._selectRow(row, false, true);
 			});
 
 			self._rowSelectionChanged();
@@ -113,7 +117,7 @@ SelectRow.prototype.selectRows = function(rows){
 		default:
 		if(Array.isArray(rows)){
 			rows.forEach(function(row){
-				self._selectRow(row, true);
+				self._selectRow(row);
 			});
 
 			self._rowSelectionChanged();
@@ -133,7 +137,7 @@ SelectRow.prototype._selectRow = function(rowInfo, silent, force){
 	if(!isNaN(self.table.options.selectable) && self.table.options.selectable !== true && !force){
 		if(self.selectedRows.length >= self.table.options.selectable){
 			if(self.table.options.selectableRollingSelection){
-				self._deselectRow(self.selectedRows[0], true);
+				self._deselectRow(self.selectedRows[0]);
 			}else{
 				return false;
 			}
@@ -143,19 +147,23 @@ SelectRow.prototype._selectRow = function(rowInfo, silent, force){
 	var row = self.table.rowManager.findRow(rowInfo);
 
 	if(row){
-		var self = this;
+		if(self.selectedRows.indexOf(row) == -1){
+			var self = this;
 
-		row.extensions.select.selected = true;
-		row.getElement().addClass("tabulator-selected");
+			row.extensions.select.selected = true;
+			row.getElement().addClass("tabulator-selected");
 
-		self.selectedRows.push(row);
+			self.selectedRows.push(row);
 
-		if(!silent){
-			self.table.options.rowSelected(row.getComponent());
-			self._rowSelectionChanged();
+			if(!silent){
+				self.table.options.rowSelected(row.getComponent());
+				self._rowSelectionChanged();
+			}
 		}
 	}else{
-		console.warn("Selection Error - No such row found, ignoring selection:" + rowInfo)
+		if(!silent){
+			console.warn("Selection Error - No such row found, ignoring selection:" + rowInfo);
+		}
 	}
 };
 
@@ -175,7 +183,7 @@ SelectRow.prototype.deselectRows = function(rows){
 	}else{
 		if(Array.isArray(rows)){
 			rows.forEach(function(row){
-				self._deselectRow(row, true);
+				self._deselectRow(row);
 			});
 
 			self._rowSelectionChanged();
@@ -210,7 +218,9 @@ SelectRow.prototype._deselectRow = function(rowInfo, silent){
 			}
 		}
 	}else{
-		console.warn("Selection Error - No such row found, ignoring selection:" + rowInfo)
+		if(!silent){
+			console.warn("Deselection Error - No such row found, ignoring selection:" + rowInfo);
+		}
 	}
 };
 

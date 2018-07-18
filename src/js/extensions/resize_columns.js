@@ -34,24 +34,24 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 		handle.addEventListener("mousedown", function(e){
 			var nearestColumn = column.getLastColumn();
 
-			if(nearestColumn){
+			if(nearestColumn && self._checkResizability(nearestColumn)){
 				self.startColumn = column;
 				self._mouseDown(e, nearestColumn);
 			}
 		});
 
-    handle.addEventListener("dblclick", function (e) {
-      var nearestColumn = column.getLastColumn();
+	    handle.addEventListener("dblclick", function (e) {    	
+	      	var nearestColumn = column.getLastColumn(); // base tabulator uses column instead of nearestColumn
 
-      if (nearestColumn) {
-        delete nearestColumn.definition.width;
-        nearestColumn.reinitializeWidth();
+	      	if (nearestColumn && self._checkResizability(nearestColumn)) {
+		        delete nearestColumn.definition.width;
+		        nearestColumn.reinitializeWidth(); // base branch uses reinitializeWidth(true);
 
-        if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
-          self.table.extensions.persistentLayout.save();
-        }
-      }
-    });
+		        if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
+		          	self.table.extensions.persistentLayout.save();
+		        }
+	      	}
+	    });
 
 		prevHandle.addEventListener("click", function(e){
 			e.stopPropagation();
@@ -66,34 +66,39 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 				colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
 				prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
 
-				if(prevColumn){
+				if(prevColumn && self._checkResizability(prevColumn)){
 					self.startColumn = column;
 					self._mouseDown(e, prevColumn);
 				}
 			}
 		});
 
-    prevHandle.addEventListener("dblclick", function (e) {
-      var nearestColumn = column.getLastColumn();
+	    prevHandle.addEventListener("dblclick", function (e) {
+	      	var nearestColumn = column.getLastColumn(); // base tabulator uses column.getFirstColumn
 
-      if (nearestColumn) {
-        var colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
-        var prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+	      	if (nearestColumn) {
+		        var colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
+		        var prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
 
-        if (prevColumn) {
-          delete prevColumn.definition.width;
-          prevColumn.reinitializeWidth();
+		        if (prevColumn && self._checkResizability(prevColumn)) {
+		          	delete prevColumn.definition.width;
+		          	prevColumn.reinitializeWidth(); // base tabulator uses reinitializeWidth(true)
 
-          if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
-            self.table.extensions.persistentLayout.save();
-          }
-        }
-      }
-    });
+		          	if (self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)) {
+		            	self.table.extensions.persistentLayout.save();
+		          	}
+		        }
+	      	}
+	    });
 
 		element.append(handle)
 		.append(prevHandle);
 	}
+};
+
+
+ResizeColumns.prototype._checkResizability = function(column){
+	return typeof column.definition.resizable != "undefined" ? column.definition.resizable : this.table.options.resizableColumns
 };
 
 ResizeColumns.prototype._mouseDown = function(e, column){
@@ -125,8 +130,8 @@ ResizeColumns.prototype._mouseDown = function(e, column){
 
 		self.table.element.removeClass("tabulator-block-select");
 
-		if(self.table.options.persistentLayout && self.table.extExists("persistentLayout", true)){
-			self.table.extensions.persistentLayout.save();
+		if(self.table.options.persistentLayout && self.table.extExists("persistence", true)){
+			self.table.extensions.persistence.save("columns");
 		}
 
 		self.table.options.columnResized(self.startColumn.getComponent())

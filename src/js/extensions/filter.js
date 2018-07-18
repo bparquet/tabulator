@@ -16,9 +16,10 @@ Filter.prototype.initializeColumn = function(column){
 	field = column.getField(),
 	filterElement, editor, editorElement, cellWrapper, typingTimer, tagType, attrType;
 
+
 	//handle successfull value change
 	function success(value){
-		var filterType = tagType == "input" && attrType == "text" ? "partial" : "match",
+		var filterType = (tagType == "input" && attrType == "text") || tagType == "textarea" ? "partial" : "match",
 		type = "",
 		filterFunc;
 
@@ -45,7 +46,6 @@ Filter.prototype.initializeColumn = function(column){
 			}
 
 			if(!filterFunc){
-
 				switch(filterType){
 					case "partial":
 					filterFunc = function(data){
@@ -72,6 +72,10 @@ Filter.prototype.initializeColumn = function(column){
 
 		self.table.rowManager.filterRefresh();
 	};
+
+	column.extensions.filter = {
+		success:success,
+	}
 
 	//handle aborted edit
 	function cancel(){};
@@ -118,6 +122,13 @@ Filter.prototype.initializeColumn = function(column){
 				},
 				getElement:function(){
 					return filterElement;
+				},
+				getRow:function(){
+					return {
+						normalizeHeight:function(){
+
+						}
+					};
 				}
 			};
 
@@ -125,11 +136,11 @@ Filter.prototype.initializeColumn = function(column){
 
 			//set Placeholder Text
 			if(field){
-				self.table.extensions.localize.bind("headerFilters.columns." + column.definition.field, function(value){
-					editorElement.attr("placeholder", typeof value !== "undefined" && value ? value : self.table.extensions.localize.getText("headerFilters.default"));
+				self.table.extensions.localize.bind("headerFilters|columns|" + column.definition.field, function(value){
+					editorElement.attr("placeholder", typeof value !== "undefined" && value ? value : self.table.extensions.localize.getText("headerFilters|default"));
 				});
 			}else{
-				self.table.extensions.localize.bind("headerFilters.default", function(value){
+				self.table.extensions.localize.bind("headerFilters|default", function(value){
 					editorElement.attr("placeholdder", typeof self.column.definition.headerFilterPlaceholder !== "undefined" && self.column.definition.headerFilterPlaceholder ? self.column.definition.headerFilterPlaceholder : value);
 				});
 			}
@@ -155,6 +166,8 @@ Filter.prototype.initializeColumn = function(column){
 				},300);
 			});
 
+			column.extensions.filter.headerElement = editorElement;
+
 			//update number filtered columns on change
 			attrType = editorElement.attr("type") ? editorElement.attr("type").toLowerCase() : "" ;
 			if(attrType == "number"){
@@ -164,14 +177,14 @@ Filter.prototype.initializeColumn = function(column){
 			}
 
 			//change text inputs to search inputs to allow for clearing of field
-			if(attrType == "text"){
+			if(attrType == "text" && this.table.browser !== "ie"){
 				editorElement.attr("type", "search");
 				editorElement.off("change blur"); //prevent blur from triggering filter and preventing selection click
 			}
 
 			//prevent input and select elements from propegating click to column sorters etc
 			tagType = editorElement.prop("tagName").toLowerCase()
-			if(tagType == "input" || tagType == "select"){
+			if(tagType == "input" || tagType == "select" || tagType == "textarea"){
 				editorElement.on("mousedown",function(e){
 					e.stopPropagation();
 				});
@@ -187,6 +200,42 @@ Filter.prototype.initializeColumn = function(column){
 		console.warn("Filter Error - Cannot add header filter, column has no field set:", column.definition.title);
 	}
 
+};
+
+//hide all header filter elements (used to ensure correct column widths in "fitData" layout mode)
+Filter.prototype.hideHeaderFilterElements = function(){
+	this.headerFilterElements.forEach(function(element){
+		element.hide();
+	});
+};
+
+//show all header filter elements (used to ensure correct column widths in "fitData" layout mode)
+Filter.prototype.showHeaderFilterElements = function(){
+	this.headerFilterElements.forEach(function(element){
+		element.show();
+	});
+};
+
+
+//programatically set value of header filter
+Filter.prototype.setHeaderFilterFocus = function(column){
+	if(column.extensions.filter && column.extensions.filter.headerElement){
+		column.extensions.filter.headerElement.focus();
+	}else{
+		console.warn("Column Filter Focus Error - No header filter set on column:", column.getField());
+	}
+};
+
+//programatically set value of header filter
+Filter.prototype.setHeaderFilterValue = function(column, value){
+	if (column){
+		if(column.extensions.filter && column.extensions.filter.headerElement){
+			column.extensions.filter.headerElement.val(value);
+			column.extensions.filter.success(value);
+		}else{
+			console.warn("Column Filter Error - No header filter set on column:", column.getField());
+		}
+	}
 };
 
 //check if the filters has changed since last use
@@ -220,45 +269,81 @@ Filter.prototype.addFilter = function(field, type, value){
 
 	field.forEach(function(filter){
 
-		var column;
+		filter = self.findFilter(filter);
 
-		var filterFunc = false;
-
-		if(typeof filter.field == "function"){
-			filterFunc = function(data){
-				return filter.field(data, filter.type || {})// pass params to custom filter function
-			}
-		}else{
-
-			if(self.filters[filter.type]){
-
-				column = self.table.columnManager.getColumnByField(filter.field);
-
-				if(column){
-					filterFunc = function(data){
-						return self.filters[filter.type](filter.value, column.getFieldValue(data));
-					}
-				}else{
-					filterFunc = function(data){
-						return self.filters[filter.type](filter.value, data[filter.field]);
-					}
-				}
-
-
-			}else{
-				console.warn("Filter Error - No such filter type found, ignoring: ", filter.type);
-			}
-		}
-
-		if(filterFunc){
-			filter.func = filterFunc;
+		if(filter){
 			self.filterList.push(filter);
 
 			self.changed = true;
 		}
 	});
 
+	if(this.table.options.persistentFilter && this.table.extExists("persistence", true)){
+		this.table.extensions.persistence.save("filter");
+	}
+
 };
+
+Filter.prototype.findFilter = function(filter){
+	var self = this,
+	column;
+
+	if(Array.isArray(filter)){
+		return this.findSubFilters(filter);
+	}
+
+
+	var filterFunc = false;
+
+	if(typeof filter.field == "function"){
+		filterFunc = function(data){
+			return filter.field(data, filter.type || {})// pass params to custom filter function
+		}
+	}else{
+
+		if(self.filters[filter.type]){
+
+			column = self.table.columnManager.getColumnByField(filter.field);
+
+			if(column){
+				filterFunc = function(data){
+					return self.filters[filter.type](filter.value, column.getFieldValue(data));
+				}
+			}else{
+				filterFunc = function(data){
+					return self.filters[filter.type](filter.value, data[filter.field]);
+				}
+			}
+
+
+		}else{
+			console.warn("Filter Error - No such filter type found, ignoring: ", filter.type);
+		}
+	}
+
+
+	filter.func = filterFunc;
+
+
+
+	return filter.func ? filter : false;
+};
+
+Filter.prototype.findSubFilters = function(filters){
+	var self = this,
+	output = [];
+
+	filters.forEach(function(filter){
+		filter = self.findFilter(filter);
+
+		if(filter){
+			output.push(filter);
+		}
+	});
+
+	return output.length ? output : false;
+}
+
 
 //get all filters
 Filter.prototype.getFilters = function(all, ajax){
@@ -326,6 +411,10 @@ Filter.prototype.removeFilter = function(field, type, value){
 
 	});
 
+	if(this.table.options.persistentFilter && this.table.extExists("persistence", true)){
+		this.table.extensions.persistence.save("filter");
+	}
+
 };
 
 //clear filters
@@ -337,6 +426,10 @@ Filter.prototype.clearFilter = function(all){
 	}
 
 	this.changed = true;
+
+	if(this.table.options.persistentFilter && this.table.extExists("persistence", true)){
+		this.table.extensions.persistence.save("filter");
+	}
 };
 
 //clear header filters
@@ -394,7 +487,7 @@ Filter.prototype.filterRow = function(row){
 	data = row.getData();
 
 	self.filterList.forEach(function(filter){
-		if(!filter.func(data)){
+		if(!self.filterRecurse(filter, data)){
 			match = false;
 		}
 	});
@@ -408,6 +501,24 @@ Filter.prototype.filterRow = function(row){
 
 	return match;
 };
+
+Filter.prototype.filterRecurse = function(filter, data){
+	var self = this,
+	match = false;
+
+	if(Array.isArray(filter)){
+		filter.forEach(function(subFilter){
+			if(self.filterRecurse(subFilter, data)){
+				match = true;
+			}
+		});
+	}else{
+		match = filter.func(data);
+	}
+
+	return match;
+};
+
 
 
 //list of available filters
@@ -448,7 +559,22 @@ Filter.prototype.filters ={
 		if(filterVal === null || typeof filterVal === "undefined"){
 			return rowVal === filterVal ? true : false;
 		}else{
-			return rowVal.toLowerCase().indexOf(filterVal.toLowerCase()) > -1 ? true : false;
+			if(typeof rowVal !== 'undefined' && rowVal !== null){
+				return String(rowVal).toLowerCase().indexOf(filterVal.toLowerCase()) > -1 ? true : false;
+			}				
+			else{
+				return false;
+			}
+		}
+	},
+
+	//in array
+	"in":function(filterVal, rowVal){
+		if(Array.isArray(filterVal)){
+			return filterVal.indexOf(rowVal) > -1;
+		}else{
+			console.warn("Filter Error - filter value is not an array:", filterVal);
+			return false;
 		}
 	},
 };
