@@ -645,6 +645,23 @@ Column.prototype.getFirstColumn = function(){
 	}
 };
 
+// return the first visible column in a group
+Column.prototype.getFirstVisibleColumn = function () {
+
+  	if (!this.isGroup) {
+    	return this;
+  	} else {
+    	if (this.columns.length) {
+      		for (var n=0; n<this.columns.length; n++) {
+        		if (this.columns[n].visible) {
+          			return this.columns[0].getFirstColumn();    
+        		}
+      		}
+    	}
+    	return false;
+  	}
+};
+
 //return the last column in a group
 Column.prototype.getLastColumn = function(){
 	if(!this.isGroup){
@@ -656,6 +673,22 @@ Column.prototype.getLastColumn = function(){
 			return false;
 		}
 	}
+};
+
+//return the last visible column in a group
+Column.prototype.getLastVisibleColumn = function () {
+  	if (!this.isGroup) {
+    	return this;
+  	} else {
+    	if (this.columns.length) {
+      		for (var n=this.columns.length-1; n>=0; n--) {
+        		if (this.columns[n].visible) {
+          			return this.columns[n].getLastVisibleColumn();
+        		}
+      		}
+    	}
+    	return false;
+  	}
 };
 
 //return all columns in a group

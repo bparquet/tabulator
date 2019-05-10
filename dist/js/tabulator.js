@@ -1678,6 +1678,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     };
 
+    // return the first visible column in a group
+
+    Column.prototype.getFirstVisibleColumn = function () {
+
+      if (!this.isGroup) {
+
+        return this;
+      } else {
+
+        if (this.columns.length) {
+
+          for (var n = 0; n < this.columns.length; n++) {
+
+            if (this.columns[n].visible) {
+
+              return this.columns[0].getFirstColumn();
+            }
+          }
+        }
+
+        return false;
+      }
+    };
+
     //return the last column in a group
 
     Column.prototype.getLastColumn = function () {
@@ -1694,6 +1718,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
           return false;
         }
+      }
+    };
+
+    //return the last visible column in a group
+
+    Column.prototype.getLastVisibleColumn = function () {
+
+      if (!this.isGroup) {
+
+        return this;
+      } else {
+
+        if (this.columns.length) {
+
+          for (var n = this.columns.length - 1; n >= 0; n--) {
+
+            if (this.columns[n].visible) {
+
+              return this.columns[n].getLastVisibleColumn();
+            }
+          }
+        }
+
+        return false;
       }
     };
 
@@ -13399,7 +13447,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         handle.addEventListener("mousedown", function (e) {
 
-          var nearestColumn = column.getLastColumn();
+          var nearestColumn = column.getLastVisibleColumn();
 
           if (nearestColumn) {
 
@@ -13411,7 +13459,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         handle.addEventListener("dblclick", function (e) {
 
-          var nearestColumn = column.getLastColumn();
+          var nearestColumn = column.getLastVisibleColumn();
 
           if (nearestColumn) {
 
@@ -13435,13 +13483,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
           var nearestColumn, colIndex, prevColumn;
 
-          nearestColumn = column.getFirstColumn();
+          nearestColumn = column.getFirstVisibleColumn();
 
           if (nearestColumn) {
 
             colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
 
-            prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+            while (colIndex > 0) {
+
+              prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+
+              if (prevColumn.visible) {
+
+                break;
+              }
+
+              colIndex--;
+            }
 
             if (prevColumn) {
 
@@ -13454,13 +13512,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
         prevHandle.addEventListener("dblclick", function (e) {
 
-          var nearestColumn = column.getLastColumn();
+          var nearestColumn = column.getLastVisibleColumn();
 
           if (nearestColumn) {
 
             var colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
 
-            var prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+            while (colIndex > 0) {
+
+              prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+
+              if (prevColumn.visible) {
+
+                break;
+              }
+
+              colIndex--;
+            }
 
             if (prevColumn) {
 
