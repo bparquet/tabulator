@@ -32,7 +32,7 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 		});
 
 		handle.addEventListener("mousedown", function(e){
-			var nearestColumn = column.getLastColumn();
+			var nearestColumn = column.getLastVisibleColumn();
 
 			if(nearestColumn){
 				self.startColumn = column;
@@ -41,7 +41,7 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 		});
 
     handle.addEventListener("dblclick", function (e) {
-      var nearestColumn = column.getLastColumn();
+      var nearestColumn = column.getLastVisibleColumn();
 
       if (nearestColumn) {
         delete nearestColumn.definition.width;
@@ -60,11 +60,17 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 		prevHandle.addEventListener("mousedown", function(e){
 			var nearestColumn, colIndex, prevColumn;
 
-			nearestColumn = column.getFirstColumn();
+			nearestColumn = column.getFirstVisibleColumn();
 
 			if(nearestColumn){
 				colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
-				prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+	            while (colIndex > 0) {
+	              	prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+	              	if (prevColumn.visible) {
+	                	break;
+	              	}
+	              	colIndex--;
+	            }
 
 				if(prevColumn){
 					self.startColumn = column;
@@ -74,11 +80,17 @@ ResizeColumns.prototype.initializeColumn = function(type, column, element){
 		});
 
     prevHandle.addEventListener("dblclick", function (e) {
-      var nearestColumn = column.getLastColumn();
+      var nearestColumn = column.getLastVisibleColumn();
 
       if (nearestColumn) {
         var colIndex = self.table.columnManager.findColumnIndex(nearestColumn);
-        var prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+        while (colIndex > 0) {
+          	prevColumn = colIndex > 0 ? self.table.columnManager.getColumnByIndex(colIndex - 1) : false;
+          	if (prevColumn.visible) {
+            	break;
+          	}
+          	colIndex--;
+        }
 
         if (prevColumn) {
           delete prevColumn.definition.width;
